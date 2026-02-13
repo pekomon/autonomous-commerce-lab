@@ -5,3 +5,14 @@ coverage
 dist
 .vite
 *.log
+
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Supabase
+supabase/.temp
+
+

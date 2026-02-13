@@ -1,4 +1,8 @@
-import { matchesProductQuery, type Product, type ProductStatus } from '@autonomous-commerce-lab/shared';
+import {
+  matchesProductQuery,
+  type Product,
+  type ProductStatus,
+} from '@autonomous-commerce-lab/shared';
 
 export type ProductStatusFilter = 'all' | ProductStatus;
 

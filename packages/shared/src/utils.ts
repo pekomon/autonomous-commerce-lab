@@ -14,7 +14,8 @@ export function matchesProductQuery(product: Product, query: string): boolean {
     return true;
   }
 
-  const searchableText = `${product.title} ${product.description} ${product.tags.join(' ')}`.toLowerCase();
+  const searchableText =
+    `${product.title} ${product.description} ${product.tags.join(' ')}`.toLowerCase();
 
   return terms.every((term) => searchableText.includes(term));
 }

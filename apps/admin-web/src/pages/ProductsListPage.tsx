@@ -2,7 +2,11 @@ import { formatMoney } from '@autonomous-commerce-lab/shared';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { filterAndSortProducts, type ProductSortOption, type ProductStatusFilter } from '../catalogLogic';
+import {
+  filterAndSortProducts,
+  type ProductSortOption,
+  type ProductStatusFilter,
+} from '../catalogLogic';
 import { mockProducts } from '../mockProducts';
 
 export function ProductsListPage() {
@@ -35,7 +39,10 @@ export function ProductsListPage() {
 
           <label>
             Status
-            <select value={status} onChange={(event) => setStatus(event.target.value as ProductStatusFilter)}>
+            <select
+              value={status}
+              onChange={(event) => setStatus(event.target.value as ProductStatusFilter)}
+            >
               <option value="all">All</option>
               <option value="active">Active</option>
               <option value="draft">Draft</option>
@@ -45,7 +52,10 @@ export function ProductsListPage() {
 
           <label>
             Sort
-            <select value={sort} onChange={(event) => setSort(event.target.value as ProductSortOption)}>
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as ProductSortOption)}
+            >
               <option value="newest">Newest first</option>
               <option value="priceLowToHigh">Price low - high</option>
               <option value="priceHighToLow">Price high - low</option>

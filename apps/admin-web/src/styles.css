@@ -12,23 +12,27 @@ body {
   margin: 0;
 }
 
+a {
+  color: #0b5fff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
 .app-shell {
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 24px;
 }
 
 header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 header h1 {
   margin: 0 0 8px;
-}
-
-main {
-  display: grid;
-  gap: 16px;
 }
 
 section {
@@ -38,11 +42,59 @@ section {
   padding: 16px;
 }
 
-section h2 {
-  margin-top: 0;
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-ul {
-  margin: 12px 0 0;
-  padding-left: 18px;
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input,
+select {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.results-count {
+  margin: 4px 0 12px;
+  color: #4b5563;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 8px;
+  vertical-align: top;
+}
+
+th {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #4b5563;
+}
+
+.details-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.details-grid p {
+  margin: 0;
 }

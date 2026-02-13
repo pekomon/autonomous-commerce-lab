@@ -1,14 +1,14 @@
 export type CurrencyCode = 'USD' | 'EUR';
 
-export interface Money {
-  amountInCents: number;
-  currency: CurrencyCode;
-}
+export type ProductStatus = 'active' | 'draft' | 'archived';
 
 export interface Product {
   id: string;
-  name: string;
-  sku: string;
-  price: Money;
-  active: boolean;
+  title: string;
+  description: string;
+  price: number;
+  currency: CurrencyCode;
+  status: ProductStatus;
+  tags: string[];
+  createdAt: string;
 }

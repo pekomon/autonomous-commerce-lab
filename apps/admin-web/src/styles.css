@@ -89,6 +89,11 @@ th {
   color: #4b5563;
 }
 
+.empty-state {
+  color: #4b5563;
+  font-style: italic;
+}
+
 .details-grid {
   display: grid;
   gap: 8px;

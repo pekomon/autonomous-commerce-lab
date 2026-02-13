@@ -76,4 +76,24 @@ describe('filterAndSortProducts', () => {
 
     expect(result.map((product) => product.id)).toEqual(['2', '1', '3']);
   });
+
+  it('sorting by price works high to low', () => {
+    const result = filterAndSortProducts(products, {
+      query: '',
+      status: 'all',
+      sort: 'priceHighToLow',
+    });
+
+    expect(result.map((product) => product.id)).toEqual(['3', '1', '2']);
+  });
+
+  it('newest sort uses createdAt descending', () => {
+    const result = filterAndSortProducts(products, {
+      query: '',
+      status: 'all',
+      sort: 'newest',
+    });
+
+    expect(result.map((product) => product.id)).toEqual(['1', '2', '3']);
+  });
 });

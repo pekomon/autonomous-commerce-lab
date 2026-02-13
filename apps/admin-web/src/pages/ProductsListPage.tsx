@@ -9,6 +9,27 @@ import {
 } from '../catalogLogic';
 import { mockProducts } from '../mockProducts';
 
+const STATUS_OPTIONS: ReadonlyArray<{ value: ProductStatusFilter; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'active', label: 'Active' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'archived', label: 'Archived' },
+];
+
+const SORT_OPTIONS: ReadonlyArray<{ value: ProductSortOption; label: string }> = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'priceLowToHigh', label: 'Price low - high' },
+  { value: 'priceHighToLow', label: 'Price high - low' },
+];
+
+function isProductStatusFilter(value: string): value is ProductStatusFilter {
+  return STATUS_OPTIONS.some((option) => option.value === value);
+}
+
+function isProductSortOption(value: string): value is ProductSortOption {
+  return SORT_OPTIONS.some((option) => option.value === value);
+}
+
 export function ProductsListPage() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<ProductStatusFilter>('all');
@@ -41,12 +62,18 @@ export function ProductsListPage() {
             Status
             <select
               value={status}
-              onChange={(event) => setStatus(event.target.value as ProductStatusFilter)}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (isProductStatusFilter(value)) {
+                  setStatus(value);
+                }
+              }}
             >
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="draft">Draft</option>
-              <option value="archived">Archived</option>
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -54,11 +81,18 @@ export function ProductsListPage() {
             Sort
             <select
               value={sort}
-              onChange={(event) => setSort(event.target.value as ProductSortOption)}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (isProductSortOption(value)) {
+                  setSort(value);
+                }
+              }}
             >
-              <option value="newest">Newest first</option>
-              <option value="priceLowToHigh">Price low - high</option>
-              <option value="priceHighToLow">Price high - low</option>
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -75,16 +109,24 @@ export function ProductsListPage() {
             </tr>
           </thead>
           <tbody>
-            {visibleProducts.map((product) => (
-              <tr key={product.id}>
-                <td>
-                  <Link to={`/products/${product.id}`}>{product.title}</Link>
+            {visibleProducts.length === 0 ? (
+              <tr>
+                <td className="empty-state" colSpan={4}>
+                  No products match the current filters.
                 </td>
-                <td>{product.status}</td>
-                <td>{formatMoney(product.price, product.currency)}</td>
-                <td>{new Date(product.createdAt).toLocaleDateString('en-US')}</td>
               </tr>
-            ))}
+            ) : (
+              visibleProducts.map((product) => (
+                <tr key={product.id}>
+                  <td>
+                    <Link to={`/products/${product.id}`}>{product.title}</Link>
+                  </td>
+                  <td>{product.status}</td>
+                  <td>{formatMoney(product.price, product.currency)}</td>
+                  <td>{new Date(product.createdAt).toLocaleDateString('en-US')}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </section>

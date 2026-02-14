@@ -45,7 +45,7 @@ supabase db reset
 
 ## Add yourself to admin allowlist
 
-After signing in once, find your user ID in the Supabase Dashboard (`Authentication -> Users`) and run:
+After signing in once, find your user ID in the Supabase Dashboard (`Authentication -> Users`) and run this in the Supabase SQL Editor (privileged context) or another trusted server-side admin context:
 
 ```sql
 insert into public.admin_users (user_id)

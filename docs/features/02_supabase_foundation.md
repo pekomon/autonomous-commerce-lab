@@ -37,7 +37,7 @@ RLS is enabled on:
 
 Policy model:
 
-- Public reads: `SELECT` allowed for catalog tables.
+- Public reads: `SELECT` allowed for catalog tables, with product visibility limited to `status = 'active'` for anon/authenticated non-admin clients.
 - Admin writes: `INSERT`/`UPDATE`/`DELETE` on catalog tables require user membership in `admin_users`.
 - Admin table protection: `admin_users` read/insert/delete allowed only for admins.
 
@@ -60,7 +60,7 @@ supabase db push
 
 ## How To Become Admin
 
-After logging in once, get your user ID from Supabase Dashboard (`Authentication -> Users`) and run:
+After logging in once, get your user ID from Supabase Dashboard (`Authentication -> Users`) and run this in Supabase SQL Editor (privileged context):
 
 ```sql
 insert into public.admin_users (user_id)

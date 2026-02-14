@@ -67,8 +67,8 @@ Only `.env.example` should be committed. Keep real values in `.env.local` (gitig
 Required keys:
 
 ```bash
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
 ```
 
 Optional local-only key (never commit):

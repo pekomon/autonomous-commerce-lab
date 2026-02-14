@@ -44,7 +44,7 @@ Policy model:
 ## Developer Setup
 
 1. Create local `.env.local` from `.env.example`.
-2. Add `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+2. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 3. Optionally add local-only `SUPABASE_SERVICE_ROLE_KEY` (never commit).
 4. Install and authenticate Supabase CLI.
 5. Link local repo to remote project.

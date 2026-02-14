@@ -60,6 +60,23 @@ Format source and docs:
 pnpm format
 ```
 
+## Supabase Env
+
+Only `.env.example` should be committed. Keep real values in `.env.local` (gitignored).
+
+Required keys:
+
+```bash
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+```
+
+Optional local-only key (never commit):
+
+```bash
+# SUPABASE_SERVICE_ROLE_KEY=
+```
+
 ## Run CI Checks Locally
 
 ```bash

@@ -9,7 +9,7 @@ interface AuthContextValue {
   user: User | null;
   signInWithPassword: (email: string, password: string) => Promise<string | null>;
   signUpWithPassword: (email: string, password: string) => Promise<string | null>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -57,7 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return error?.message ?? null;
       },
       signOut: async () => {
-        await supabase.auth.signOut();
+        const { error } = await supabase.auth.signOut();
+        return error?.message ?? null;
       },
     };
   }, [loading, session]);

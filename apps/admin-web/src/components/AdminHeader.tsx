@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 import { useAuth } from '../auth/AuthProvider';
 
@@ -9,6 +10,16 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
   const { signOut } = useAuth();
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+
+  async function handleSignOut() {
+    setSignOutError(null);
+
+    const error = await signOut();
+    if (error) {
+      setSignOutError(error);
+    }
+  }
 
   return (
     <header>
@@ -16,9 +27,10 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
         <div>
           <h1>{title}</h1>
           <p>{subtitle}</p>
+          {signOutError ? <p className="error-message">{signOutError}</p> : null}
         </div>
 
-        <button className="secondary-button" onClick={() => void signOut()} type="button">
+        <button className="secondary-button" onClick={() => void handleSignOut()} type="button">
           Sign out
         </button>
       </div>

@@ -1,13 +1,16 @@
-import { formatMoney } from '@autonomous-commerce-lab/shared';
-import { useMemo, useState } from 'react';
+import { formatMoney, type Product, type ProductStatus } from '@autonomous-commerce-lab/shared';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import {
-  filterAndSortProducts,
-  type ProductSortOption,
-  type ProductStatusFilter,
-} from '../catalogLogic';
-import { mockProducts } from '../mockProducts';
+import { AdminHeader } from '../components/AdminHeader';
+import { filterAndSortProducts, type ProductSortOption } from '../catalogLogic';
+import { supabase } from '../lib/supabaseClient';
+import { mapDbRowToProduct, type ProductDbRow } from '../products/productMappers';
+
+type ProductStatusFilter = 'all' | ProductStatus;
+
+const PRODUCT_SELECT =
+  'id,title,description,price_amount,currency,status,tags,created_at,updated_at';
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: ProductStatusFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -35,39 +38,77 @@ export function ProductsListPage() {
   const [status, setStatus] = useState<ProductStatusFilter>('all');
   const [sort, setSort] = useState<ProductSortOption>('newest');
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProducts() {
+      setLoading(true);
+      setError(null);
+
+      const { data, error: fetchError } = await supabase
+        .from('products')
+        .select(PRODUCT_SELECT)
+        .order('created_at', { ascending: false });
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (fetchError) {
+        setError('Failed to load products from Supabase.');
+        setProducts([]);
+      } else {
+        const mapped = (data ?? []).map((row) => mapDbRowToProduct(row as ProductDbRow));
+        setProducts(mapped);
+      }
+
+      setLoading(false);
+    }
+
+    void loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const visibleProducts = useMemo(() => {
-    return filterAndSortProducts(mockProducts, { query, status, sort });
-  }, [query, status, sort]);
+    return filterAndSortProducts(products, { query, status, sort });
+  }, [products, query, status, sort]);
 
   return (
     <div className="app-shell">
-      <header>
-        <h1>Products (Admin)</h1>
-        <p>Catalog search, filtering, and sorting using mock data.</p>
-      </header>
+      <AdminHeader
+        subtitle="Catalog search, filtering, and sorting using Supabase data."
+        title="Products (Admin)"
+      />
 
       <section>
         <div className="controls">
           <label>
             Search
             <input
-              type="search"
-              value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search title, description, or tags"
+              type="search"
+              value={query}
             />
           </label>
 
           <label>
             Status
             <select
-              value={status}
               onChange={(event) => {
                 const value = event.target.value;
                 if (isProductStatusFilter(value)) {
                   setStatus(value);
                 }
               }}
+              value={status}
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -80,13 +121,13 @@ export function ProductsListPage() {
           <label>
             Sort
             <select
-              value={sort}
               onChange={(event) => {
                 const value = event.target.value;
                 if (isProductSortOption(value)) {
                   setSort(value);
                 }
               }}
+              value={sort}
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -97,38 +138,48 @@ export function ProductsListPage() {
           </label>
         </div>
 
-        <p className="results-count">{visibleProducts.length} product(s) found</p>
+        {loading ? <p>Loading products...</p> : null}
+        {error ? <p className="error-message">{error}</p> : null}
+        {!loading && !error ? (
+          <p className="results-count">{visibleProducts.length} product(s) found</p>
+        ) : null}
 
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Status</th>
-              <th>Price</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleProducts.length === 0 ? (
+        {!loading && !error ? (
+          <table>
+            <thead>
               <tr>
-                <td className="empty-state" colSpan={4}>
-                  No products match the current filters.
-                </td>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Price</th>
+                <th>Created</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              visibleProducts.map((product) => (
-                <tr key={product.id}>
-                  <td>
-                    <Link to={`/products/${product.id}`}>{product.title}</Link>
+            </thead>
+            <tbody>
+              {visibleProducts.length === 0 ? (
+                <tr>
+                  <td className="empty-state" colSpan={5}>
+                    No products match the current filters.
                   </td>
-                  <td>{product.status}</td>
-                  <td>{formatMoney(product.price, product.currency)}</td>
-                  <td>{new Date(product.createdAt).toLocaleDateString('en-US')}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                visibleProducts.map((product) => (
+                  <tr key={product.id}>
+                    <td>
+                      <Link to={`/products/${product.id}`}>{product.title}</Link>
+                    </td>
+                    <td>{product.status}</td>
+                    <td>{formatMoney(product.price, product.currency)}</td>
+                    <td>{new Date(product.createdAt).toLocaleDateString('en-US')}</td>
+                    <td>
+                      <Link to={`/products/${product.id}/edit`}>Edit</Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        ) : null}
       </section>
     </div>
   );

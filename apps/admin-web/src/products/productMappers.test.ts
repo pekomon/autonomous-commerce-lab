@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mapDbRowToProduct, parseTags } from './productMappers';
+import { isNonEmptyTitle, mapDbRowToProduct, parseTags } from './productMappers';
 
 describe('parseTags', () => {
   it('parses comma-separated tags, trimming whitespace', () => {
@@ -9,6 +9,17 @@ describe('parseTags', () => {
 
   it('removes empty values and duplicates', () => {
     expect(parseTags('coffee, , coffee,  tea  , tea')).toEqual(['coffee', 'tea']);
+  });
+});
+
+describe('isNonEmptyTitle', () => {
+  it('returns false for empty or whitespace-only titles', () => {
+    expect(isNonEmptyTitle('')).toBe(false);
+    expect(isNonEmptyTitle('   ')).toBe(false);
+  });
+
+  it('returns true for non-empty titles', () => {
+    expect(isNonEmptyTitle('Espresso Beans')).toBe(true);
   });
 });
 

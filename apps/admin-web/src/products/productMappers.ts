@@ -60,6 +60,10 @@ export function parseTags(input: string): string[] {
   return [...uniqueTags];
 }
 
+export function isNonEmptyTitle(title: string): boolean {
+  return title.trim().length > 0;
+}
+
 export function mapDbRowToProduct(row: ProductDbRow): Product {
   return {
     id: row.id,

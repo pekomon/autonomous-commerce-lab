@@ -6,6 +6,7 @@ import { AdminHeader } from '../components/AdminHeader';
 import { supabase } from '../lib/supabaseClient';
 import { toProductWriteErrorMessage } from '../products/productErrors';
 import {
+  isNonEmptyTitle,
   mapWriteInputToPayload,
   type ProductDbRow,
   type ProductWriteInput,
@@ -97,6 +98,12 @@ export function ProductFormPage() {
     event.preventDefault();
     setSaving(true);
     setError(null);
+
+    if (!isNonEmptyTitle(values.title)) {
+      setError('Title is required and cannot be empty.');
+      setSaving(false);
+      return;
+    }
 
     const parsedPriceAmount = Number(values.priceAmount);
 

@@ -38,6 +38,7 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
       <nav className="page-nav">
         <Link to="/products">Products</Link>
         <Link to="/products/new">Create Product</Link>
+        <Link to="/categories">Categories</Link>
       </nav>
     </header>
   );

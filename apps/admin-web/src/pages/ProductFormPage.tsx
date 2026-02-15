@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { AdminHeader } from '../components/AdminHeader';
+import { ProductCategoryAssignment } from '../components/ProductCategoryAssignment';
 import { ProductImagesManager } from '../components/ProductImagesManager';
 import { supabase } from '../lib/supabaseClient';
 import { toProductWriteErrorMessage } from '../products/productErrors';
@@ -293,6 +294,8 @@ export function ProductFormPage() {
           </div>
         </form>
       </section>
+
+      {isEdit && id ? <ProductCategoryAssignment productId={id} /> : null}
 
       {isEdit && id ? (
         <ProductImagesManager allowManage={true} productId={id} />

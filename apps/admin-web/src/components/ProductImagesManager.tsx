@@ -134,8 +134,7 @@ export function ProductImagesManager({ productId, allowManage }: ProductImagesMa
     setActiveDeleteId(image.id);
     setError(null);
 
-    const { error: storageDeleteError } = await supabase
-      .storage
+    const { error: storageDeleteError } = await supabase.storage
       .from(PRODUCT_IMAGES_BUCKET)
       .remove([image.path]);
 

@@ -28,7 +28,7 @@ Storage bucket provisioning is a manual Supabase Dashboard step.
 1. Open Supabase Dashboard.
 2. Go to `Storage`.
 3. Create bucket `product-images`.
-4. Set bucket visibility to `Public` (or keep private if your storage object `SELECT` policy allows public read).
+4. Set bucket visibility to `Public`. This project uses `getPublicUrl`, which requires a public bucket for direct public downloads.
 5. Ensure storage object policies enforce:
    - public read for bucket `product-images`
    - admin-only insert/update/delete for bucket `product-images` using `public.is_admin_user()`

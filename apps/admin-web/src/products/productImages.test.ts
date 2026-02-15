@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildProductImagePath, mapProductImageRowToViewModel } from './productImages';
+import {
+  buildProductImagePath,
+  getProductImagePublicUrl,
+  mapProductImageRowToViewModel,
+  toProductImageErrorMessage,
+} from './productImages';
 
 describe('buildProductImagePath', () => {
   it('builds path with product id, token, and sanitized filename', () => {
@@ -37,5 +42,45 @@ describe('mapProductImageRowToViewModel', () => {
       createdAt: '2026-02-15T12:00:00.000Z',
       publicUrl: 'https://example.com/image.png',
     });
+  });
+});
+
+describe('getProductImagePublicUrl', () => {
+  it('returns public URL from storage client result', () => {
+    const client = {
+      storage: {
+        from: () => ({
+          getPublicUrl: () => ({
+            data: {
+              publicUrl: 'https://example.com/public/product-image.png',
+            },
+          }),
+        }),
+      },
+    };
+
+    expect(getProductImagePublicUrl(client, 'prod-1/token-image.png')).toBe(
+      'https://example.com/public/product-image.png',
+    );
+  });
+});
+
+describe('toProductImageErrorMessage', () => {
+  it('maps authorization errors to a friendly message', () => {
+    expect(
+      toProductImageErrorMessage({ code: '42501', message: 'permission denied for table' }),
+    ).toBe('You are not authorized to manage product images.');
+  });
+
+  it('maps storage errors to a bucket guidance message', () => {
+    expect(toProductImageErrorMessage({ message: 'storage bucket not found' })).toBe(
+      'Image storage operation failed. Verify bucket and storage policies.',
+    );
+  });
+
+  it('returns generic fallback for unknown errors', () => {
+    expect(toProductImageErrorMessage({ message: 'unexpected failure' })).toBe(
+      'Unable to process product image action. Please try again.',
+    );
   });
 });

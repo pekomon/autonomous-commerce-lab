@@ -134,23 +134,47 @@ export function ProductImagesManager({ productId, allowManage }: ProductImagesMa
     setActiveDeleteId(image.id);
     setError(null);
 
-    const { error: storageDeleteError } = await supabase.storage
-      .from(PRODUCT_IMAGES_BUCKET)
-      .remove([image.path]);
+    const { data: deletedRow, error: rowDeleteError } = await supabase
+      .from('product_images')
+      .delete()
+      .eq('id', image.id)
+      .select(PRODUCT_IMAGE_SELECT)
+      .maybeSingle();
 
-    if (storageDeleteError) {
-      setError(toProductImageErrorMessage(storageDeleteError));
+    if (rowDeleteError) {
+      setError(toProductImageErrorMessage(rowDeleteError));
       setActiveDeleteId(null);
       return;
     }
 
-    const { error: rowDeleteError } = await supabase
-      .from('product_images')
-      .delete()
-      .eq('id', image.id);
+    if (!deletedRow) {
+      setImages((current) => current.filter((item) => item.id !== image.id));
+      setActiveDeleteId(null);
+      return;
+    }
 
-    if (rowDeleteError) {
-      setError(toProductImageErrorMessage(rowDeleteError));
+    const row = deletedRow as ProductImageDbRow;
+    const { error: storageDeleteError } = await supabase.storage
+      .from(PRODUCT_IMAGES_BUCKET)
+      .remove([row.path]);
+
+    if (storageDeleteError) {
+      const { error: rollbackError } = await supabase.from('product_images').insert({
+        id: row.id,
+        product_id: row.product_id,
+        path: row.path,
+        sort_order: row.sort_order,
+        created_at: row.created_at,
+      });
+
+      if (rollbackError) {
+        setError(
+          `${toProductImageErrorMessage(storageDeleteError)} Metadata rollback failed. Refresh and retry.`,
+        );
+      } else {
+        setError(`${toProductImageErrorMessage(storageDeleteError)} Metadata was restored.`);
+      }
+
       setActiveDeleteId(null);
       return;
     }

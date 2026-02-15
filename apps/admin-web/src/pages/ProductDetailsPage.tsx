@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { AdminHeader } from '../components/AdminHeader';
+import { ProductImagesManager } from '../components/ProductImagesManager';
 import { supabase } from '../lib/supabaseClient';
 import { toProductWriteErrorMessage } from '../products/productErrors';
 import { mapDbRowToProduct, type ProductDbRow } from '../products/productMappers';
@@ -145,6 +146,8 @@ export function ProductDetailsPage() {
 
         {archiveError ? <p className="error-message">{archiveError}</p> : null}
       </section>
+
+      <ProductImagesManager allowManage={false} productId={product.id} />
 
       <Link to="/products">Back to products</Link>
     </div>

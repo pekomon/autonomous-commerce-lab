@@ -12,3 +12,10 @@ export interface Product {
   tags: string[];
   createdAt: string;
 }
+
+export interface Category {
+  id: string;
+  slug: string;
+  name: string;
+  createdAt: string;
+}

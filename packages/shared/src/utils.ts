@@ -19,3 +19,17 @@ export function matchesProductQuery(product: Product, query: string): boolean {
 
   return terms.every((term) => searchableText.includes(term));
 }
+
+export function normalizeCategorySlug(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+export function validateCategorySlug(slug: string): boolean {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+}

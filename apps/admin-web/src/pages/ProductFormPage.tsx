@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { AdminHeader } from '../components/AdminHeader';
+import { ProductImagesManager } from '../components/ProductImagesManager';
 import { supabase } from '../lib/supabaseClient';
 import { toProductWriteErrorMessage } from '../products/productErrors';
 import {
@@ -292,6 +293,15 @@ export function ProductFormPage() {
           </div>
         </form>
       </section>
+
+      {isEdit && id ? (
+        <ProductImagesManager allowManage={true} productId={id} />
+      ) : (
+        <section>
+          <h2>Product Images</h2>
+          <p>Create the product first to upload images.</p>
+        </section>
+      )}
     </div>
   );
 }

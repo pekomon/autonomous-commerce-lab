@@ -27,6 +27,28 @@ a:hover {
   padding: 24px;
 }
 
+.auth-shell {
+  max-width: 520px;
+}
+
+.auth-card {
+  display: grid;
+  gap: 12px;
+}
+
+.top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-nav {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
 header {
   margin-bottom: 20px;
 }
@@ -57,11 +79,72 @@ label {
 }
 
 input,
-select {
+select,
+textarea,
+button {
   border: 1px solid #d1d5db;
   border-radius: 6px;
   padding: 8px;
   font-size: 14px;
+  font-family: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  cursor: pointer;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.primary-button {
+  background: #0b5fff;
+  color: #ffffff;
+  border-color: #0b5fff;
+}
+
+.secondary-button {
+  background: #ffffff;
+  color: #1f2933;
+}
+
+.danger-button {
+  background: #d92d20;
+  color: #ffffff;
+  border-color: #d92d20;
+}
+
+.text-button {
+  border: none;
+  background: transparent;
+  color: #0b5fff;
+  padding: 0;
 }
 
 .results-count {
@@ -92,6 +175,16 @@ th {
 .empty-state {
   color: #4b5563;
   font-style: italic;
+}
+
+.error-message {
+  color: #b42318;
+  margin: 0;
+}
+
+.success-message {
+  color: #027a48;
+  margin: 0;
 }
 
 .details-grid {

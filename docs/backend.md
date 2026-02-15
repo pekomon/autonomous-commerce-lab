@@ -7,8 +7,8 @@ This project uses Supabase directly from clients. Database schema and policies a
 - Supabase account and project
 - Supabase CLI installed
 - Local `.env.local` with:
-  - `SUPABASE_URL`
-  - `SUPABASE_ANON_KEY`
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
   - Optional local-only `SUPABASE_SERVICE_ROLE_KEY` (never commit)
 
 ## Install Supabase CLI

@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 
 import { fetchCategories } from '../categories/categoriesApi';
 import {
-  toCategoryWriteErrorMessage,
   toProductCategoryErrorMessage,
+  toProductCategoryReadErrorMessage,
 } from '../categories/categoryErrors';
 import {
   fetchAssignedCategoryIds,
@@ -51,8 +51,8 @@ export function ProductCategoryAssignment({ productId }: ProductCategoryAssignme
 
         setError(
           loadError instanceof Error
-            ? toCategoryWriteErrorMessage(loadError)
-            : 'Unable to load categories.',
+            ? toProductCategoryReadErrorMessage(loadError)
+            : 'Unable to load product category assignments. Please try again.',
         );
       } finally {
         if (isMounted) {

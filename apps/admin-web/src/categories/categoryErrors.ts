@@ -26,10 +26,26 @@ export function toCategoryWriteErrorMessage(error: SupabaseErrorLike): string {
   return 'Unable to save category changes. Please try again.';
 }
 
+export function toCategoryReadErrorMessage(error: SupabaseErrorLike): string {
+  if (isAuthorizationError(error)) {
+    return 'You are not authorized to view categories.';
+  }
+
+  return 'Unable to load categories. Please try again.';
+}
+
 export function toProductCategoryErrorMessage(error: SupabaseErrorLike): string {
   if (isAuthorizationError(error)) {
     return 'You are not authorized to modify product categories.';
   }
 
   return 'Unable to save product category assignments. Please try again.';
+}
+
+export function toProductCategoryReadErrorMessage(error: SupabaseErrorLike): string {
+  if (isAuthorizationError(error)) {
+    return 'You are not authorized to view product category assignments.';
+  }
+
+  return 'Unable to load product category assignments. Please try again.';
 }

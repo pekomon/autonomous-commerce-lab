@@ -11,7 +11,10 @@ import {
   fetchCategories,
   updateCategory,
 } from '../categories/categoriesApi';
-import { toCategoryWriteErrorMessage } from '../categories/categoryErrors';
+import {
+  toCategoryReadErrorMessage,
+  toCategoryWriteErrorMessage,
+} from '../categories/categoryErrors';
 import { AdminHeader } from '../components/AdminHeader';
 
 interface CategoryFormValues {
@@ -59,7 +62,7 @@ export function CategoriesPage() {
 
         setError(
           fetchError instanceof Error
-            ? toCategoryWriteErrorMessage(fetchError)
+            ? toCategoryReadErrorMessage(fetchError)
             : 'Unable to load categories.',
         );
       } finally {

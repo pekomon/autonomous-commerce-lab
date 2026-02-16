@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabaseClient';
-import { computeCategoryAssignmentDiff } from './categoryAssignments';
 
 interface ProductCategoryRow {
   category_id: string;
@@ -23,35 +22,12 @@ export async function syncProductCategoryAssignments(
   nextCategoryIds: string[],
 ): Promise<void> {
   const normalizedNextCategoryIds = [...new Set(nextCategoryIds)];
-  const currentCategoryIds = await fetchAssignedCategoryIds(productId);
+  const { error } = await supabase.rpc('sync_product_categories', {
+    p_product_id: productId,
+    p_category_ids: normalizedNextCategoryIds,
+  });
 
-  const { toInsert, toDelete } = computeCategoryAssignmentDiff(
-    currentCategoryIds,
-    normalizedNextCategoryIds,
-  );
-
-  if (toInsert.length > 0) {
-    const insertPayload = toInsert.map((categoryId) => ({
-      product_id: productId,
-      category_id: categoryId,
-    }));
-
-    const { error: insertError } = await supabase.from('product_categories').insert(insertPayload);
-
-    if (insertError) {
-      throw insertError;
-    }
-  }
-
-  if (toDelete.length > 0) {
-    const { error: deleteError } = await supabase
-      .from('product_categories')
-      .delete()
-      .eq('product_id', productId)
-      .in('category_id', toDelete);
-
-    if (deleteError) {
-      throw deleteError;
-    }
+  if (error) {
+    throw error;
   }
 }

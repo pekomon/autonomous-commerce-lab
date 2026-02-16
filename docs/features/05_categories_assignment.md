@@ -57,6 +57,7 @@ This feature does not add new migrations.
 
 ## Known Follow-ups
 
+- Assignment sync is now atomic via Supabase RPC (`public.sync_product_categories`) from migration `supabase/migrations/20260216171000_sync_product_categories_rpc.sql`.
 - Add category search and pagination for larger catalogs.
 - Add safer category delete UX (for example, explicit dependency warnings when products are assigned).
 - Surface assigned categories on product details and list views.

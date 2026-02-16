@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthProvider';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
+import { CategoriesPage } from './pages/CategoriesPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { ProductFormPage } from './pages/ProductFormPage';
 import { ProductsListPage } from './pages/ProductsListPage';
@@ -32,6 +33,7 @@ export default function App() {
         <Route element={<ProductFormPage />} path="/products/new" />
         <Route element={<ProductDetailsPage />} path="/products/:id" />
         <Route element={<ProductFormPage />} path="/products/:id/edit" />
+        <Route element={<CategoriesPage />} path="/categories" />
       </Route>
 
       <Route element={<Navigate replace to="/" />} path="*" />

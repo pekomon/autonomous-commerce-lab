@@ -197,6 +197,28 @@ th {
   margin: 0;
 }
 
+.checkbox-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.checkbox-item input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-item small {
+  color: #4b5563;
+}
+
 .image-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

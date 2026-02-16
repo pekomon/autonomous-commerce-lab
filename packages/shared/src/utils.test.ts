@@ -1,7 +1,12 @@
 import type { Product } from './types';
 import { describe, expect, it } from 'vitest';
 
-import { formatMoney, matchesProductQuery } from './utils';
+import {
+  formatMoney,
+  matchesProductQuery,
+  normalizeCategorySlug,
+  validateCategorySlug,
+} from './utils';
 
 const sampleProduct: Product = {
   id: 'prod-001',
@@ -35,5 +40,29 @@ describe('matchesProductQuery', () => {
 
   it('returns false when no terms are found', () => {
     expect(matchesProductQuery(sampleProduct, 'tea')).toBe(false);
+  });
+});
+
+describe('normalizeCategorySlug', () => {
+  it('normalizes casing, spaces, and underscores', () => {
+    expect(normalizeCategorySlug('  Hot Drinks_Menu  ')).toBe('hot-drinks-menu');
+  });
+
+  it('removes unsupported characters and duplicate hyphens', () => {
+    expect(normalizeCategorySlug('Tea & Coffee --- Specials!')).toBe('tea-coffee-specials');
+  });
+});
+
+describe('validateCategorySlug', () => {
+  it('accepts lowercase slugs with numbers and hyphens', () => {
+    expect(validateCategorySlug('coffee-2026')).toBe(true);
+  });
+
+  it('rejects uppercase, spaces, and invalid separators', () => {
+    expect(validateCategorySlug('Coffee')).toBe(false);
+    expect(validateCategorySlug('coffee menu')).toBe(false);
+    expect(validateCategorySlug('-coffee')).toBe(false);
+    expect(validateCategorySlug('coffee-')).toBe(false);
+    expect(validateCategorySlug('coffee--menu')).toBe(false);
   });
 });

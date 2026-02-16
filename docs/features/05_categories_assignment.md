@@ -27,7 +27,9 @@
   - public read for category data
   - admin-only writes via `admin_users` allowlist
 
-This feature does not add new migrations.
+Atomic assignment sync is implemented via migration:
+
+- `supabase/migrations/20260216171000_sync_product_categories_rpc.sql`
 
 ## Files Changed
 
@@ -46,6 +48,8 @@ This feature does not add new migrations.
 - `apps/admin-web/src/categories/categoryMappers.ts`
 - `apps/admin-web/src/categories/categoriesApi.ts`
 - `apps/admin-web/src/categories/productCategoriesApi.ts`
+- `apps/admin-web/src/categories/productCategoriesApi.test.ts`
+- `supabase/migrations/20260216171000_sync_product_categories_rpc.sql`
 - `docs/features/05_categories_assignment.md`
 
 ## Tests Executed
@@ -57,6 +61,7 @@ This feature does not add new migrations.
 
 ## Known Follow-ups
 
+- Assignment sync is now atomic via Supabase RPC (`public.sync_product_categories`) from migration `supabase/migrations/20260216171000_sync_product_categories_rpc.sql`.
 - Add category search and pagination for larger catalogs.
 - Add safer category delete UX (for example, explicit dependency warnings when products are assigned).
 - Surface assigned categories on product details and list views.

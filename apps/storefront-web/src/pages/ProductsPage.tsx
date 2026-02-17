@@ -3,11 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { ProductCard } from '../components/ProductCard';
 import { StorefrontHeader } from '../components/StorefrontHeader';
-import {
-  fetchCategories,
-  fetchProducts,
-  type StorefrontProductCard,
-} from '../data/storefrontApi';
+import { fetchCategories, fetchProducts, type StorefrontProductCard } from '../data/storefrontApi';
 import type { ProductSortOption } from '../data/storefrontHelpers';
 import { useSupabase } from '../lib/SupabaseContext';
 
@@ -179,9 +175,7 @@ export function ProductsPage() {
 
         {!loadingProducts && !error ? <p>{products.length} product(s) found</p> : null}
 
-        {!loadingProducts && !error && products.length === 0 ? (
-          <p>No products found.</p>
-        ) : null}
+        {!loadingProducts && !error && products.length === 0 ? <p>No products found.</p> : null}
 
         <div className="product-grid">
           {products.map((product) => (

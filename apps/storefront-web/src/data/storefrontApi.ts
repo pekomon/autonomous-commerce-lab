@@ -5,8 +5,9 @@ import {
   type Product,
   type ProductStatus,
 } from '@autonomous-commerce-lab/shared';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
+import type { StorefrontSupabaseClient } from '../lib/supabaseClient';
+import type { Database } from './database.types';
 import { sortProducts, type ProductSortOption } from './storefrontHelpers';
 
 const PRODUCT_IMAGES_BUCKET = 'product-images';
@@ -17,37 +18,8 @@ const CATEGORY_SELECT = 'id,slug,name,created_at';
 const PRODUCT_CATEGORY_SELECT = 'product_id,category_id';
 const PRODUCT_IMAGE_SELECT = 'id,product_id,path,sort_order,created_at';
 
-interface ProductRow {
-  id: string;
-  title: string;
-  description: string | null;
-  price_amount: number;
-  currency: string;
-  status: string;
-  tags: string[] | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface CategoryRow {
-  id: string;
-  slug: string;
-  name: string;
-  created_at: string;
-}
-
-interface ProductCategoryRow {
-  product_id: string;
-  category_id: string;
-}
-
-interface ProductImageRow {
-  id: string;
-  product_id: string;
-  path: string;
-  sort_order: number;
-  created_at: string;
-}
+type ProductRow = Database['public']['Tables']['products']['Row'];
+type CategoryRow = Database['public']['Tables']['categories']['Row'];
 
 const VALID_CURRENCIES: CurrencyCode[] = ['USD', 'EUR'];
 const VALID_STATUSES: ProductStatus[] = ['active', 'draft', 'archived'];
@@ -90,7 +62,7 @@ function mapCategoryRowToCategory(row: CategoryRow): Category {
   };
 }
 
-function toPublicImageUrl(client: SupabaseClient, path: string): string {
+function toPublicImageUrl(client: StorefrontSupabaseClient, path: string): string {
   return client.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
@@ -114,18 +86,18 @@ export interface FetchProductsParams {
   sort: ProductSortOption;
 }
 
-export async function fetchCategories(client: SupabaseClient): Promise<Category[]> {
+export async function fetchCategories(client: StorefrontSupabaseClient): Promise<Category[]> {
   const { data, error } = await client.from('categories').select(CATEGORY_SELECT).order('name');
 
   if (error) {
     throw error;
   }
 
-  return (data ?? []).map((row) => mapCategoryRowToCategory(row as CategoryRow));
+  return (data ?? []).map((row) => mapCategoryRowToCategory(row));
 }
 
 export async function fetchProductCategoryIds(
-  client: SupabaseClient,
+  client: StorefrontSupabaseClient,
   productId: string,
 ): Promise<string[]> {
   const { data, error } = await client
@@ -137,11 +109,11 @@ export async function fetchProductCategoryIds(
     throw error;
   }
 
-  return (data ?? []).map((row) => (row as { category_id: string }).category_id);
+  return (data ?? []).map((row) => row.category_id);
 }
 
 export async function fetchProductImages(
-  client: SupabaseClient,
+  client: StorefrontSupabaseClient,
   productId: string,
 ): Promise<ProductImageItem[]> {
   const { data, error } = await client
@@ -154,9 +126,7 @@ export async function fetchProductImages(
     throw error;
   }
 
-  return (data ?? []).map((row) => {
-    const typedRow = row as ProductImageRow;
-
+  return (data ?? []).map((typedRow) => {
     return {
       id: typedRow.id,
       path: typedRow.path,
@@ -168,7 +138,7 @@ export async function fetchProductImages(
 }
 
 export async function fetchProductById(
-  client: SupabaseClient,
+  client: StorefrontSupabaseClient,
   id: string,
 ): Promise<Product | null> {
   const { data, error } = await client
@@ -185,11 +155,11 @@ export async function fetchProductById(
     return null;
   }
 
-  return mapProductRowToProduct(data as ProductRow);
+  return mapProductRowToProduct(data);
 }
 
 export async function fetchProducts(
-  client: SupabaseClient,
+  client: StorefrontSupabaseClient,
   params: FetchProductsParams,
 ): Promise<StorefrontProductCard[]> {
   const [{ data: productRows, error: productsError }, categories, productCategoryRows, imageRows] =
@@ -222,30 +192,28 @@ export async function fetchProducts(
 
   const categoryById = new Map<string, Category>();
   for (const row of categories.data ?? []) {
-    const category = mapCategoryRowToCategory(row as CategoryRow);
+    const category = mapCategoryRowToCategory(row);
     categoryById.set(category.id, category);
   }
 
   const productCategoryIds = new Map<string, string[]>();
   for (const row of productCategoryRows.data ?? []) {
-    const relation = row as ProductCategoryRow;
-    const current = productCategoryIds.get(relation.product_id) ?? [];
-    current.push(relation.category_id);
-    productCategoryIds.set(relation.product_id, current);
+    const current = productCategoryIds.get(row.product_id) ?? [];
+    current.push(row.category_id);
+    productCategoryIds.set(row.product_id, current);
   }
 
   const firstImagePathByProductId = new Map<string, string>();
   for (const row of imageRows.data ?? []) {
-    const image = row as ProductImageRow;
-    if (!firstImagePathByProductId.has(image.product_id)) {
-      firstImagePathByProductId.set(image.product_id, image.path);
+    if (!firstImagePathByProductId.has(row.product_id)) {
+      firstImagePathByProductId.set(row.product_id, row.path);
     }
   }
 
   const query = params.query.trim();
 
   const cards: StorefrontProductCard[] = (productRows ?? []).map((row) => {
-    const product = mapProductRowToProduct(row as ProductRow);
+    const product = mapProductRowToProduct(row);
     const categoryIds = productCategoryIds.get(product.id) ?? [];
     const categoryNames = categoryIds
       .map((categoryId) => categoryById.get(categoryId)?.name)

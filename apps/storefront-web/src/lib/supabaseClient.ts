@@ -1,9 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
+import type { Database } from '../data/database.types';
 import type { RuntimeSupabaseConfig } from './runtimeConfig';
 
+export type StorefrontSupabaseClient = SupabaseClient<Database>;
+
 export interface SupabaseClientState {
-  client: SupabaseClient | null;
+  client: StorefrontSupabaseClient | null;
   configError: string | null;
 }
 
@@ -17,7 +20,7 @@ export function createSupabaseClientState(config: RuntimeSupabaseConfig): Supaba
   }
 
   return {
-    client: createClient(config.supabaseUrl, config.supabaseAnonKey),
+    client: createClient<Database>(config.supabaseUrl, config.supabaseAnonKey),
     configError: null,
   };
 }

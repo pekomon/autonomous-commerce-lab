@@ -56,22 +56,31 @@ export function HomePage() {
     };
   }, [client]);
 
+  if (!client) {
+    return (
+      <div className="storefront-shell">
+        <StorefrontHeader
+          subtitle="Discover active products from the public catalog."
+          title="Featured Products"
+        />
+
+        <section>
+          <p className="error-message">{configError ?? 'Storefront configuration is missing.'}</p>
+          <p>
+            Add values to <code>.env.local</code> for local development, or provide
+            <code> public/config.json</code> for runtime deployment config.
+          </p>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="storefront-shell">
       <StorefrontHeader
         subtitle="Discover active products from the public catalog."
         title="Featured Products"
       />
-
-      {configError ? (
-        <section>
-          <p className="error-message">{configError}</p>
-          <p>
-            Add values to <code>.env.local</code> for local development, or provide
-            <code> public/config.json</code> for runtime deployment config.
-          </p>
-        </section>
-      ) : null}
 
       <section>
         <div className="section-row">

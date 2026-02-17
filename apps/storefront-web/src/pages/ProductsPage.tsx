@@ -28,7 +28,8 @@ export function ProductsPage() {
 
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [productsError, setProductsError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -40,6 +41,7 @@ export function ProductsPage() {
       }
 
       setLoadingCategories(true);
+      setCategoryError(null);
 
       try {
         const categoryRows = await fetchCategories(client);
@@ -54,7 +56,7 @@ export function ProductsPage() {
           return;
         }
 
-        setError('Unable to load categories.');
+        setCategoryError('Unable to load categories.');
       } finally {
         if (isMounted) {
           setLoadingCategories(false);
@@ -79,7 +81,7 @@ export function ProductsPage() {
       }
 
       setLoadingProducts(true);
-      setError(null);
+      setProductsError(null);
 
       try {
         const productRows = await fetchProducts(client, {
@@ -98,7 +100,7 @@ export function ProductsPage() {
           return;
         }
 
-        setError('Unable to load products. Please try again.');
+        setProductsError('Unable to load products. Please try again.');
       } finally {
         if (isMounted) {
           setLoadingProducts(false);
@@ -113,14 +115,31 @@ export function ProductsPage() {
     };
   }, [categoryId, client, query, sort]);
 
+  if (!client) {
+    return (
+      <div className="storefront-shell">
+        <StorefrontHeader
+          subtitle="Filter products by category, search terms, or price sorting."
+          title="Browse Products"
+        />
+
+        <section>
+          <p className="error-message">{configError ?? 'Storefront configuration is missing.'}</p>
+          <p>
+            Add values to <code>.env.local</code> for local development, or provide
+            <code> public/config.json</code> for runtime deployment config.
+          </p>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="storefront-shell">
       <StorefrontHeader
         subtitle="Filter products by category, search terms, or price sorting."
         title="Browse Products"
       />
-
-      {configError ? <p className="error-message">{configError}</p> : null}
 
       <section>
         <div className="controls">
@@ -171,11 +190,14 @@ export function ProductsPage() {
         </div>
 
         {loadingProducts ? <p>Loading products...</p> : null}
-        {error ? <p className="error-message">{error}</p> : null}
+        {categoryError ? <p className="error-message">{categoryError}</p> : null}
+        {productsError ? <p className="error-message">{productsError}</p> : null}
 
-        {!loadingProducts && !error ? <p>{products.length} product(s) found</p> : null}
+        {!loadingProducts && !productsError ? <p>{products.length} product(s) found</p> : null}
 
-        {!loadingProducts && !error && products.length === 0 ? <p>No products found.</p> : null}
+        {!loadingProducts && !productsError && products.length === 0 ? (
+          <p>No products found.</p>
+        ) : null}
 
         <div className="product-grid">
           {products.map((product) => (

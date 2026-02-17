@@ -77,10 +77,19 @@ Workflow added: `.github/workflows/storefront-pages.yml`
 - Deploys with `actions/deploy-pages`
 - No secrets are required for the workflow itself
 
-Notes:
+### Configure Runtime Values for Production
 
-- The deployed app will run with placeholder config unless runtime config values are provided.
-- Until a final production key strategy is chosen, deployment is functional but may show configuration warning in production.
+Use repository variables so deployed Pages builds receive runtime config without committing keys in Git:
+
+1. Open GitHub repository settings.
+2. Go to `Settings -> Secrets and variables -> Actions -> Variables`.
+3. Add variables:
+   - `STOREFRONT_SUPABASE_URL`
+   - `STOREFRONT_SUPABASE_ANON_KEY`
+4. Run the `Storefront Pages` workflow manually (`workflow_dispatch`) or push a matching change.
+
+The workflow writes these variables into `apps/storefront-web/public/config.json` during build.
+If variables are empty, deployment still succeeds and the app shows a configuration warning instead of crashing.
 
 ## Tests
 

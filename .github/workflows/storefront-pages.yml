@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - 'apps/storefront-web/**'
+      - 'packages/shared/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/storefront-pages.yml'
   workflow_dispatch:
 
@@ -38,6 +41,18 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate runtime config
+        env:
+          STOREFRONT_SUPABASE_URL: ${{ vars.STOREFRONT_SUPABASE_URL }}
+          STOREFRONT_SUPABASE_ANON_KEY: ${{ vars.STOREFRONT_SUPABASE_ANON_KEY }}
+        run: |
+          cat > apps/storefront-web/public/config.json <<EOF
+          {
+            "supabaseUrl": "${STOREFRONT_SUPABASE_URL}",
+            "supabaseAnonKey": "${STOREFRONT_SUPABASE_ANON_KEY}"
+          }
+          EOF
 
       - name: Build storefront
         run: pnpm --filter @autonomous-commerce-lab/storefront-web build -- --base "/${{ github.event.repository.name }}/"

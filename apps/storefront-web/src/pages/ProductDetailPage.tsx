@@ -79,11 +79,28 @@ export function ProductDetailPage() {
 
   const activeImage = useMemo(() => images[activeImageIndex] ?? null, [activeImageIndex, images]);
 
+  if (!client) {
+    return (
+      <div className="storefront-shell">
+        <StorefrontHeader subtitle="Public product detail from Supabase." title="Product Detail" />
+
+        <section>
+          <p className="error-message">{configError ?? 'Storefront configuration is missing.'}</p>
+          <p>
+            Add values to <code>.env.local</code> for local development, or provide
+            <code> public/config.json</code> for runtime deployment config.
+          </p>
+        </section>
+
+        <Link to="/products">Back to products</Link>
+      </div>
+    );
+  }
+
   return (
     <div className="storefront-shell">
       <StorefrontHeader subtitle="Public product detail from Supabase." title="Product Detail" />
 
-      {configError ? <p className="error-message">{configError}</p> : null}
       {loading ? <p>Loading product details...</p> : null}
       {error ? <p className="error-message">{error}</p> : null}
 

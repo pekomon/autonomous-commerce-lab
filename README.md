@@ -36,6 +36,12 @@ Run the admin web app:
 pnpm --filter @autonomous-commerce-lab/admin-web dev
 ```
 
+Run the storefront web app:
+
+```bash
+pnpm --filter @autonomous-commerce-lab/storefront-web dev
+```
+
 Run tests:
 
 ```bash
@@ -77,6 +83,15 @@ Optional local-only key (never commit):
 # SUPABASE_SERVICE_ROLE_KEY=
 ```
 
+## Storefront Runtime Config
+
+Storefront also supports runtime config via:
+
+- `apps/storefront-web/public/config.json` (placeholder-safe)
+- `apps/storefront-web/public/config.example.json` (template)
+
+If runtime config is empty, the app falls back to `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+
 ## Run CI Checks Locally
 
 ```bash
@@ -90,5 +105,6 @@ pnpm -r build
 ## Workspace Overview
 
 - `apps/admin-web`: React + Vite + TypeScript admin frontend.
+- `apps/storefront-web`: React + Vite + TypeScript read-only customer storefront.
 - `packages/shared`: Shared domain types and utility functions.
 - `docs/`: Product specification, feature backlog, architecture decisions, and agent workflows.

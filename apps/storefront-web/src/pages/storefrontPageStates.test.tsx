@@ -33,9 +33,14 @@ import { HomePage } from './HomePage';
 import { ProductDetailPage } from './ProductDetailPage';
 import { ProductsPage } from './ProductsPage';
 
+const routerFuture = {
+  v7_relativeSplatPath: true,
+  v7_startTransition: true,
+} as const;
+
 function renderProductsPage() {
   return render(
-    <MemoryRouter>
+    <MemoryRouter future={routerFuture}>
       <ProductsPage />
     </MemoryRouter>,
   );
@@ -43,7 +48,7 @@ function renderProductsPage() {
 
 function renderProductDetailPage(path = '/products/prod-1') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter future={routerFuture} initialEntries={[path]}>
       <Routes>
         <Route element={<ProductDetailPage />} path="/products/:id" />
       </Routes>
@@ -71,7 +76,7 @@ describe('storefront page states', () => {
 
   it('HomePage shows config guidance without empty catalog state when config is missing', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={routerFuture}>
         <HomePage />
       </MemoryRouter>,
     );

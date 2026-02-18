@@ -95,6 +95,18 @@ If variables are empty, deployment still succeeds and the app shows a configurat
 
 - Added unit tests for pure sorting helper in `src/data/storefrontHelpers.test.ts`.
 
+## Keep Supabase Types in Sync
+
+Storefront uses typed Supabase rows from `apps/storefront-web/src/data/database.types.ts`.
+Regenerate this file whenever schema changes are applied.
+
+1. Ensure Supabase CLI is installed and the project is linked (`supabase link --project-ref <your-project-ref>`).
+2. Run from repository root:
+
+```bash
+pnpm --filter @autonomous-commerce-lab/storefront-web types:db
+```
+
 ## Next Steps
 
 - Add cart and checkout flow (Feature 07+).

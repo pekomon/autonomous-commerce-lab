@@ -43,6 +43,14 @@ supabase start
 supabase db reset
 ```
 
+## Generate TypeScript DB types (storefront)
+
+After schema changes, regenerate storefront Supabase types:
+
+```bash
+pnpm --filter @autonomous-commerce-lab/storefront-web types:db
+```
+
 ## Add yourself to admin allowlist
 
 After signing in once, find your user ID in the Supabase Dashboard (`Authentication -> Users`) and run this in the Supabase SQL Editor (privileged context) or another trusted server-side admin context:

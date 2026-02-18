@@ -94,6 +94,7 @@ If variables are empty, deployment still succeeds and the app shows a configurat
 ## Tests
 
 - Added unit tests for pure sorting helper in `src/data/storefrontHelpers.test.ts`.
+- Added page-state tests for config-missing and error handling in `src/pages/storefrontPageStates.test.tsx`.
 
 ## Keep Supabase Types in Sync
 
@@ -106,6 +107,8 @@ Regenerate this file whenever schema changes are applied.
 ```bash
 pnpm --filter @autonomous-commerce-lab/storefront-web types:db
 ```
+
+Note: the `types:db` script uses shell redirection (`>`), so run it from a Unix-like shell (macOS/Linux, WSL, or Git Bash).
 
 ## Next Steps
 

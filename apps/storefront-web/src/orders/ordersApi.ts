@@ -16,6 +16,14 @@ const ORDER_SELECT = 'id,user_id,status,currency,total_amount,created_at';
 const ORDER_ITEM_SELECT =
   'id,order_id,product_id,quantity,unit_price_amount,line_total_amount,created_at';
 
+export function createCheckoutIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `checkout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 export interface OrderSummary {
   id: string;
   userId: string;
@@ -95,6 +103,10 @@ export function toOrderErrorMessage(error: unknown): string {
     return 'Your cart is empty.';
   }
 
+  if (message.includes('idempotency key')) {
+    return 'Checkout could not start. Please refresh the page and try again.';
+  }
+
   if (message.includes('share one currency')) {
     return 'Cart items use mixed currencies. Keep one currency to checkout.';
   }
@@ -131,11 +143,17 @@ export async function fetchCheckoutProducts(
 export async function createOrderFromCart(
   client: StorefrontSupabaseClient,
   cartItems: CartItem[],
+  idempotencyKey: string,
 ): Promise<string> {
   const normalizedItems = normalizeCartItems(cartItems);
+  const normalizedKey = idempotencyKey.trim();
 
   if (normalizedItems.length === 0) {
     throw new Error('Your cart is empty.');
+  }
+
+  if (normalizedKey.length === 0) {
+    throw new Error('Checkout idempotency key is missing.');
   }
 
   const products = await fetchCheckoutProducts(
@@ -153,6 +171,7 @@ export async function createOrderFromCart(
 
   const { data, error } = await client.rpc('checkout_create_order', {
     p_items: checkoutItemsPayload,
+    p_idempotency_key: normalizedKey,
   });
 
   if (error) {

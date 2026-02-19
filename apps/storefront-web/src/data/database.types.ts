@@ -79,6 +79,7 @@ export interface Database {
           status: string;
           currency: string;
           total_amount: number;
+          checkout_idempotency_key: string | null;
           created_at: string;
         };
         Insert: {
@@ -87,6 +88,7 @@ export interface Database {
           status: string;
           currency?: string;
           total_amount: number;
+          checkout_idempotency_key?: string | null;
           created_at?: string;
         };
         Update: {
@@ -95,6 +97,7 @@ export interface Database {
           status?: string;
           currency?: string;
           total_amount?: number;
+          checkout_idempotency_key?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -214,6 +217,7 @@ export interface Database {
       checkout_create_order: {
         Args: {
           p_items: Json;
+          p_idempotency_key: string;
         };
         Returns: string;
       };

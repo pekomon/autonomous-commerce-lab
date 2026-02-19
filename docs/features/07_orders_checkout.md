@@ -47,7 +47,7 @@ Customer policies:
 Write path hardening:
 
 - direct customer `INSERT` on `orders` and `order_items` is revoked
-- checkout writes are allowed only through `public.checkout_create_order(jsonb)` which validates active products, currency consistency, and server-side pricing before inserts
+- checkout writes are allowed only through `public.checkout_create_order(jsonb, text)` which validates active products, currency consistency, and server-side pricing before inserts
 - checkout RPC writes `orders.total_amount` and `order_items` from one materialized snapshot to keep totals and line items consistent under concurrent catalog changes
 
 Admin policies:

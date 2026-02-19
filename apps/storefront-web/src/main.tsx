@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import App from './App';
+import { AuthProvider } from './auth/AuthProvider';
+import { CartProvider } from './cart/CartProvider';
 import { SupabaseProvider } from './lib/SupabaseContext';
 import { loadRuntimeSupabaseConfig } from './lib/runtimeConfig';
 import { createSupabaseClientState } from './lib/supabaseClient';
@@ -16,7 +18,11 @@ async function bootstrap() {
     <StrictMode>
       <SupabaseProvider value={supabaseState}>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
-          <App />
+          <AuthProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </AuthProvider>
         </BrowserRouter>
       </SupabaseProvider>
     </StrictMode>,

@@ -17,8 +17,34 @@ const storefrontApiMocks = vi.hoisted(() => ({
   fetchProducts: vi.fn(),
 }));
 
+const authState = vi.hoisted(() => ({
+  loading: false,
+  session: null,
+  signInWithPassword: vi.fn(),
+  signOut: vi.fn(),
+  signUpWithPassword: vi.fn(),
+  user: null,
+}));
+
+const cartState = vi.hoisted(() => ({
+  addItem: vi.fn(),
+  clear: vi.fn(),
+  itemCount: 0,
+  items: [],
+  removeItem: vi.fn(),
+  setQuantity: vi.fn(),
+}));
+
 vi.mock('../lib/SupabaseContext', () => ({
   useSupabase: () => supabaseState,
+}));
+
+vi.mock('../auth/AuthProvider', () => ({
+  useAuth: () => authState,
+}));
+
+vi.mock('../cart/CartProvider', () => ({
+  useCart: () => cartState,
 }));
 
 vi.mock('../data/storefrontApi', () => ({

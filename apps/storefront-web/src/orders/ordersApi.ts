@@ -4,7 +4,6 @@ import {
   normalizeCartItems,
   type CartItem,
   type CheckoutProductSnapshot,
-  type OrderItemDraft,
 } from '../cart/cartHelpers';
 import type { Database } from '../data/database.types';
 
@@ -80,16 +79,6 @@ function mapOrderItemRows(
   }));
 }
 
-function mapOrderItemDraft(orderId: string, item: OrderItemDraft) {
-  return {
-    order_id: orderId,
-    product_id: item.productId,
-    quantity: item.quantity,
-    unit_price_amount: item.unitPriceAmount,
-    line_total_amount: item.lineTotalAmount,
-  };
-}
-
 export function toOrderErrorMessage(error: unknown): string {
   if (!error || typeof error !== 'object') {
     return 'Unable to complete the order. Please try again.';
@@ -100,6 +89,18 @@ export function toOrderErrorMessage(error: unknown): string {
 
   if (code === '42501' || message.toLowerCase().includes('row-level security')) {
     return 'You are not authorized to complete this action.';
+  }
+
+  if (message.includes('Cart is empty')) {
+    return 'Your cart is empty.';
+  }
+
+  if (message.includes('share one currency')) {
+    return 'Cart items use mixed currencies. Keep one currency to checkout.';
+  }
+
+  if (message.includes('not available for checkout')) {
+    return 'Some products are no longer available for checkout.';
   }
 
   return message || 'Unable to complete the order. Please try again.';
@@ -129,7 +130,6 @@ export async function fetchCheckoutProducts(
 
 export async function createOrderFromCart(
   client: StorefrontSupabaseClient,
-  userId: string,
   cartItems: CartItem[],
 ): Promise<string> {
   const normalizedItems = normalizeCartItems(cartItems);
@@ -143,32 +143,27 @@ export async function createOrderFromCart(
     normalizedItems.map((item) => item.productId),
   );
 
-  const draft = buildOrderDraft(normalizedItems, products);
+  // Local pre-checks keep UX fast; server RPC re-validates with transactional writes.
+  buildOrderDraft(normalizedItems, products);
 
-  const { data: orderRow, error: orderError } = await client
-    .from('orders')
-    .insert({
-      user_id: userId,
-      status: 'created',
-      currency: draft.currency,
-      total_amount: draft.totalAmount,
-    })
-    .select(ORDER_SELECT)
-    .single();
+  const checkoutItemsPayload = normalizedItems.map((item) => ({
+    product_id: item.productId,
+    quantity: item.quantity,
+  }));
 
-  if (orderError) {
-    throw orderError;
+  const { data, error } = await client.rpc('checkout_create_order', {
+    p_items: checkoutItemsPayload,
+  });
+
+  if (error) {
+    throw error;
   }
 
-  const { error: itemInsertError } = await client
-    .from('order_items')
-    .insert(draft.items.map((item) => mapOrderItemDraft(orderRow.id, item)));
-
-  if (itemInsertError) {
-    throw itemInsertError;
+  if (typeof data !== 'string' || data.length === 0) {
+    throw new Error('Checkout did not return an order id.');
   }
 
-  return orderRow.id;
+  return data;
 }
 
 export async function fetchMyOrders(

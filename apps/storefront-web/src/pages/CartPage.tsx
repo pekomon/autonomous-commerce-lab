@@ -145,7 +145,7 @@ export function CartPage() {
     setCheckoutSubmitting(true);
 
     try {
-      const orderId = await createOrderFromCart(client, user.id, items);
+      const orderId = await createOrderFromCart(client, items);
       clear();
       navigate(`/orders/${orderId}`, { replace: true });
     } catch (error) {

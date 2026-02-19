@@ -8,6 +8,7 @@ import { useCart } from '../cart/CartProvider';
 import { StorefrontHeader } from '../components/StorefrontHeader';
 import { useSupabase } from '../lib/SupabaseContext';
 import {
+  createCheckoutIdempotencyKey,
   createOrderFromCart,
   fetchCheckoutProducts,
   toOrderErrorMessage,
@@ -33,6 +34,7 @@ export function CartPage() {
   const [productsError, setProductsError] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+  const [checkoutIdempotencyKey, setCheckoutIdempotencyKey] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -85,6 +87,10 @@ export function CartPage() {
       isMounted = false;
     };
   }, [client, items]);
+
+  useEffect(() => {
+    setCheckoutIdempotencyKey(null);
+  }, [items]);
 
   const productsById = useMemo(() => {
     return new Map(products.map((product) => [product.id, product]));
@@ -145,8 +151,15 @@ export function CartPage() {
     setCheckoutSubmitting(true);
 
     try {
-      const orderId = await createOrderFromCart(client, items);
+      const attemptKey = checkoutIdempotencyKey ?? createCheckoutIdempotencyKey();
+
+      if (!checkoutIdempotencyKey) {
+        setCheckoutIdempotencyKey(attemptKey);
+      }
+
+      const orderId = await createOrderFromCart(client, items, attemptKey);
       clear();
+      setCheckoutIdempotencyKey(null);
       navigate(`/orders/${orderId}`, { replace: true });
     } catch (error) {
       setCheckoutError(toOrderErrorMessage(error));

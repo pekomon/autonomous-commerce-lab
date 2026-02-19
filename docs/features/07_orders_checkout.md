@@ -47,7 +47,7 @@ Customer policies:
 Write path hardening:
 
 - direct customer `INSERT` on `orders` and `order_items` is revoked
-- checkout writes are allowed only through `public.checkout_create_order(jsonb)` which validates active products, currency consistency, and server-side pricing before inserts
+- checkout writes are allowed only through `public.checkout_create_order(jsonb, text)` which validates active products, currency consistency, and server-side pricing before inserts
 - checkout RPC writes `orders.total_amount` and `order_items` from one materialized snapshot to keep totals and line items consistent under concurrent catalog changes
 
 Admin policies:
@@ -64,6 +64,7 @@ Admin policies:
   - fetches latest product data at checkout
   - computes totals client-side
   - creates `orders` and `order_items` through one transactional SQL RPC (`public.checkout_create_order`)
+  - sends a client-generated idempotency key to make retries return the same order instead of creating duplicates
   - clears cart and navigates to `/orders/:id`
 - Customer order pages:
   - `/orders` (my orders)
@@ -76,6 +77,7 @@ Admin policies:
 - `supabase/migrations/20260219183100_enable_orders_rls_and_policies.sql`
 - `supabase/migrations/20260219194000_harden_checkout_with_rpc.sql`
 - `supabase/migrations/20260219195500_checkout_snapshot_consistency.sql`
+- `supabase/migrations/20260219202500_checkout_idempotency_keys.sql`
 - `apps/storefront-web/src/App.tsx`
 - `apps/storefront-web/src/main.tsx`
 - `apps/storefront-web/src/styles.css`
@@ -141,10 +143,9 @@ pnpm --filter @autonomous-commerce-lab/storefront-web dev
 - No payment provider integration yet.
 - No customer cancellation flow yet.
 - Product title fallback in order details may show product ID when the product row is not readable.
-- Checkout does not yet include an idempotency key, so retry behavior depends on client-side controls.
+- Checkout idempotency key is stored only on the order record; payload hash validation is not yet implemented for accidental key reuse with different cart payloads.
 
 ## Known Follow-ups
 
-- Add idempotency keys and retry-safe semantics to checkout RPC calls.
 - Add payment integration and post-payment status transitions.
 - Add customer cancellation and admin fulfillment workflows.

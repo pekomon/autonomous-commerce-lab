@@ -55,8 +55,10 @@ a:hover {
 
 .header-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 8px;
+  align-items: center;
 }
 
 .header-nav a {
@@ -68,6 +70,12 @@ a:hover {
 .header-nav a.active {
   background: #dbeafe;
   color: #1e3a8a;
+}
+
+.session-info {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #334155;
 }
 
 section {
@@ -112,6 +120,23 @@ button {
 
 button {
   cursor: pointer;
+}
+
+.text-button {
+  border: none;
+  background: transparent;
+  color: #0b5fff;
+  padding: 0;
+}
+
+.primary-button {
+  background: #0b5fff;
+  color: #ffffff;
+  border-color: #0b5fff;
+}
+
+.success-message {
+  color: #147d32;
 }
 
 .product-grid {
@@ -220,12 +245,67 @@ button {
   color: #b42318;
 }
 
+.auth-card {
+  max-width: 480px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.action-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cart-list,
+.order-list,
+.order-items-list {
+  display: grid;
+  gap: 10px;
+}
+
+.cart-row,
+.order-row,
+.order-item-row {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  align-items: center;
+}
+
+.order-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.cart-row,
+.order-item-row {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 120px) minmax(0, 140px) auto;
+}
+
+.cart-footer {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+
 @media (max-width: 800px) {
   .storefront-header {
     flex-direction: column;
   }
 
   .detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-row,
+  .order-item-row,
+  .order-row {
     grid-template-columns: 1fr;
   }
 }

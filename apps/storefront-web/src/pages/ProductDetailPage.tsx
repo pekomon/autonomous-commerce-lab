@@ -2,6 +2,7 @@ import { formatMoney, type Category, type Product } from '@autonomous-commerce-l
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { useCart } from '../cart/CartProvider';
 import { StorefrontHeader } from '../components/StorefrontHeader';
 import {
   fetchCategories,
@@ -15,6 +16,7 @@ import { useSupabase } from '../lib/SupabaseContext';
 export function ProductDetailPage() {
   const { id } = useParams();
   const { client, configError } = useSupabase();
+  const { addItem } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [images, setImages] = useState<ProductImageItem[]>([]);
@@ -22,6 +24,7 @@ export function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [cartMessage, setCartMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -149,6 +152,22 @@ export function ProductDetailPage() {
             <p>
               <strong>Tags:</strong> {product.tags.join(', ') || 'None'}
             </p>
+
+            <div className="action-row">
+              <button
+                className="primary-button"
+                onClick={() => {
+                  addItem(product.id, 1);
+                  setCartMessage('Product added to cart.');
+                }}
+                type="button"
+              >
+                Add to cart
+              </button>
+              <Link to="/cart">View cart</Link>
+            </div>
+
+            {cartMessage ? <p className="success-message">{cartMessage}</p> : null}
           </div>
         </section>
       ) : null}

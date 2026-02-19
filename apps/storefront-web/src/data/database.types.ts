@@ -27,6 +27,86 @@ export interface Database {
         };
         Relationships: [];
       };
+      order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          product_id: string;
+          quantity: number;
+          unit_price_amount: number;
+          line_total_amount: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          product_id: string;
+          quantity: number;
+          unit_price_amount: number;
+          line_total_amount: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          product_id?: string;
+          quantity?: number;
+          unit_price_amount?: number;
+          line_total_amount?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'order_items_order_id_fkey';
+            columns: ['order_id'];
+            isOneToOne: false;
+            referencedRelation: 'orders';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'order_items_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      orders: {
+        Row: {
+          id: string;
+          user_id: string;
+          status: string;
+          currency: string;
+          total_amount: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          status: string;
+          currency?: string;
+          total_amount: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          status?: string;
+          currency?: string;
+          total_amount?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'orders_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       product_categories: {
         Row: {
           product_id: string;

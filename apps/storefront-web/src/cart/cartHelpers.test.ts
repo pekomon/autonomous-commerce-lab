@@ -74,4 +74,21 @@ describe('buildOrderDraft', () => {
       buildOrderDraft([{ productId: 'prod-3', quantity: 1 }], sampleProducts),
     ).toThrowError('Product prod-3 is not available.');
   });
+
+  it('throws when cart contains mixed currencies', () => {
+    const mixedCurrencyProducts: CheckoutProductSnapshot[] = [
+      { id: 'prod-1', title: 'Alpha', priceAmount: 1000, currency: 'EUR', status: 'active' },
+      { id: 'prod-4', title: 'Delta', priceAmount: 1500, currency: 'USD', status: 'active' },
+    ];
+
+    expect(() =>
+      buildOrderDraft(
+        [
+          { productId: 'prod-1', quantity: 1 },
+          { productId: 'prod-4', quantity: 1 },
+        ],
+        mixedCurrencyProducts,
+      ),
+    ).toThrowError('Checkout requires all cart items to use the same currency.');
+  });
 });

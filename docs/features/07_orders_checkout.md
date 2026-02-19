@@ -48,6 +48,7 @@ Write path hardening:
 
 - direct customer `INSERT` on `orders` and `order_items` is revoked
 - checkout writes are allowed only through `public.checkout_create_order(jsonb)` which validates active products, currency consistency, and server-side pricing before inserts
+- checkout RPC writes `orders.total_amount` and `order_items` from one materialized snapshot to keep totals and line items consistent under concurrent catalog changes
 
 Admin policies:
 
@@ -74,6 +75,7 @@ Admin policies:
 - `supabase/migrations/20260219183000_create_orders_schema.sql`
 - `supabase/migrations/20260219183100_enable_orders_rls_and_policies.sql`
 - `supabase/migrations/20260219194000_harden_checkout_with_rpc.sql`
+- `supabase/migrations/20260219195500_checkout_snapshot_consistency.sql`
 - `apps/storefront-web/src/App.tsx`
 - `apps/storefront-web/src/main.tsx`
 - `apps/storefront-web/src/styles.css`

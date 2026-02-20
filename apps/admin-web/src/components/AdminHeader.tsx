@@ -39,6 +39,7 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
         <Link to="/products">Products</Link>
         <Link to="/products/new">Create Product</Link>
         <Link to="/categories">Categories</Link>
+        <Link to="/orders">Orders</Link>
       </nav>
     </header>
   );

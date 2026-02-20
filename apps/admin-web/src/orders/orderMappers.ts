@@ -1,26 +1,11 @@
 import { formatMoney, type CurrencyCode } from '@autonomous-commerce-lab/shared';
+import type { Database } from '../data/database.types';
 
 export type OrderStatus = 'created' | 'cancelled' | 'fulfilled';
 export type OrderStatusFilter = 'all' | OrderStatus;
 
-export interface OrderDbRow {
-  id: string;
-  user_id: string;
-  status: string;
-  currency: string;
-  total_amount: number;
-  created_at: string;
-}
-
-export interface OrderItemDbRow {
-  id: string;
-  order_id: string;
-  product_id: string;
-  quantity: number;
-  unit_price_amount: number;
-  line_total_amount: number;
-  created_at: string;
-}
+export type OrderDbRow = Database['public']['Tables']['orders']['Row'];
+export type OrderItemDbRow = Database['public']['Tables']['order_items']['Row'];
 
 export interface AdminOrderSummary {
   id: string;

@@ -3,6 +3,17 @@ interface SupabaseErrorLike {
   message?: string;
 }
 
+export const ORDER_STATUS_CONFLICT_CODE = 'ORDER_STATUS_CONFLICT';
+
+export interface OrderStatusConflictError extends Error {
+  code: typeof ORDER_STATUS_CONFLICT_CODE;
+}
+
+export function createOrderStatusConflictError(): OrderStatusConflictError {
+  const error = new Error('Order status changed by another admin. Refresh and try again.');
+  return Object.assign(error, { code: ORDER_STATUS_CONFLICT_CODE });
+}
+
 function isAuthorizationError(error: SupabaseErrorLike): boolean {
   const message = (error.message ?? '').toLowerCase();
 
@@ -15,8 +26,7 @@ function isAuthorizationError(error: SupabaseErrorLike): boolean {
 }
 
 export function isOrderStatusConflictError(error: SupabaseErrorLike): boolean {
-  const message = (error.message ?? '').toLowerCase();
-  return message.includes('changed by another admin');
+  return error.code === ORDER_STATUS_CONFLICT_CODE;
 }
 
 export function toOrderReadErrorMessage(error: SupabaseErrorLike): string {

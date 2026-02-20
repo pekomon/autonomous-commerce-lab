@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { createOrderStatusConflictError } from './orderErrors';
 import {
   buildOrderItemCountMap,
   canTransitionOrderStatus,
@@ -6,8 +7,6 @@ import {
   mapOrderItemDbRow,
   type AdminOrderDetails,
   type AdminOrderSummary,
-  type OrderDbRow,
-  type OrderItemDbRow,
   type OrderStatus,
 } from './orderMappers';
 
@@ -34,7 +33,7 @@ export async function fetchAdminOrders(): Promise<AdminOrderSummary[]> {
 
   return (orderRows ?? []).map((row) => {
     const itemCount = itemCountsByOrderId.get(row.id) ?? 0;
-    return mapOrderDbRowToSummary(row as OrderDbRow, itemCount);
+    return mapOrderDbRowToSummary(row, itemCount);
   });
 }
 
@@ -81,12 +80,10 @@ export async function fetchAdminOrderDetails(orderId: string): Promise<AdminOrde
     }
   }
 
-  const mappedItems = (orderItemRows ?? []).map((row) =>
-    mapOrderItemDbRow(row as OrderItemDbRow, productTitleById),
-  );
+  const mappedItems = (orderItemRows ?? []).map((row) => mapOrderItemDbRow(row, productTitleById));
 
   return {
-    ...mapOrderDbRowToSummary(orderRow as OrderDbRow, mappedItems.length),
+    ...mapOrderDbRowToSummary(orderRow, mappedItems.length),
     items: mappedItems,
   };
 }
@@ -113,7 +110,7 @@ export async function updateAdminOrderStatus(
   }
 
   if (!data) {
-    throw new Error('Order status changed by another admin. Refresh and try again.');
+    throw createOrderStatusConflictError();
   }
 
   return nextStatus === data.status ? nextStatus : currentStatus;

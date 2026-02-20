@@ -51,8 +51,11 @@ Relevant existing migration:
 - `apps/admin-web/src/orders/orderMappers.ts`
 - `apps/admin-web/src/orders/orderLogic.ts`
 - `apps/admin-web/src/orders/orderErrors.ts`
+- `apps/admin-web/src/orders/ordersApi.test.ts`
 - `apps/admin-web/src/orders/orderMappers.test.ts`
 - `apps/admin-web/src/orders/orderLogic.test.ts`
+- `apps/admin-web/src/data/database.types.ts`
+- `apps/admin-web/src/lib/supabaseClient.ts`
 - `docs/features/08_admin_orders_dashboard.md`
 
 ## Manual Test Checklist

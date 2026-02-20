@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ORDER_STATUS_CONFLICT_CODE } from './orderErrors';
 
 const { eqMock, fromMock, maybeSingleMock, selectMock, updateMock } = vi.hoisted(() => ({
   eqMock: vi.fn(),
@@ -51,9 +52,10 @@ describe('updateAdminOrderStatus', () => {
       error: null,
     });
 
-    await expect(updateAdminOrderStatus('ord-1', 'created', 'fulfilled')).rejects.toThrow(
-      'Order status changed by another admin. Refresh and try again.',
-    );
+    await expect(updateAdminOrderStatus('ord-1', 'created', 'fulfilled')).rejects.toMatchObject({
+      code: ORDER_STATUS_CONFLICT_CODE,
+      message: 'Order status changed by another admin. Refresh and try again.',
+    });
   });
 
   it('skips DB call when transition is invalid', async () => {

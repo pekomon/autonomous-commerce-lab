@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { AdminHeader } from '../components/AdminHeader';
-import { toOrderReadErrorMessage, toOrderWriteErrorMessage } from '../orders/orderErrors';
+import {
+  isOrderStatusConflictError,
+  toOrderReadErrorMessage,
+  toOrderWriteErrorMessage,
+} from '../orders/orderErrors';
 import {
   canTransitionOrderStatus,
   formatOrderAmount,
@@ -83,7 +87,17 @@ export function OrderDetailsPage() {
         setStatusMessage(`Order status updated to ${updatedStatus}.`);
       }
     } catch (updateError) {
-      setStatusError(toOrderWriteErrorMessage(updateError as { code?: string; message?: string }));
+      const typedError = updateError as { code?: string; message?: string };
+      setStatusError(toOrderWriteErrorMessage(typedError));
+
+      if (isOrderStatusConflictError(typedError) && id) {
+        try {
+          const refreshed = await fetchAdminOrderDetails(id);
+          setOrder(refreshed);
+        } catch {
+          // Keep the original status error if refresh fails.
+        }
+      }
     } finally {
       setUpdatingStatus(false);
       setUpdatingTargetStatus(null);

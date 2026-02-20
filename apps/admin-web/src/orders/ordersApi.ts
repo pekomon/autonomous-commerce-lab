@@ -104,11 +104,16 @@ export async function updateAdminOrderStatus(
     .from('orders')
     .update({ status: nextStatus })
     .eq('id', orderId)
+    .eq('status', currentStatus)
     .select('status')
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw error;
+  }
+
+  if (!data) {
+    throw new Error('Order status changed by another admin. Refresh and try again.');
   }
 
   return nextStatus === data.status ? nextStatus : currentStatus;

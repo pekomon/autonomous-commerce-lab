@@ -14,6 +14,11 @@ function isAuthorizationError(error: SupabaseErrorLike): boolean {
   );
 }
 
+export function isOrderStatusConflictError(error: SupabaseErrorLike): boolean {
+  const message = (error.message ?? '').toLowerCase();
+  return message.includes('changed by another admin');
+}
+
 export function toOrderReadErrorMessage(error: SupabaseErrorLike): string {
   if (isAuthorizationError(error)) {
     return 'You are not authorized to view orders.';
@@ -23,6 +28,10 @@ export function toOrderReadErrorMessage(error: SupabaseErrorLike): string {
 }
 
 export function toOrderWriteErrorMessage(error: SupabaseErrorLike): string {
+  if (isOrderStatusConflictError(error)) {
+    return 'Order status was changed by another admin. The page has been refreshed.';
+  }
+
   if (isAuthorizationError(error)) {
     return 'You are not authorized to update orders.';
   }

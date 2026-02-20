@@ -7,6 +7,8 @@ import { CategoriesPage } from './pages/CategoriesPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { ProductFormPage } from './pages/ProductFormPage';
 import { ProductsListPage } from './pages/ProductsListPage';
+import { OrderDetailsPage } from './pages/OrderDetailsPage';
+import { OrdersListPage } from './pages/OrdersListPage';
 
 function HomeRoute() {
   const { loading, user } = useAuth();
@@ -34,6 +36,8 @@ export default function App() {
         <Route element={<ProductDetailsPage />} path="/products/:id" />
         <Route element={<ProductFormPage />} path="/products/:id/edit" />
         <Route element={<CategoriesPage />} path="/categories" />
+        <Route element={<OrdersListPage />} path="/orders" />
+        <Route element={<OrderDetailsPage />} path="/orders/:id" />
       </Route>
 
       <Route element={<Navigate replace to="/" />} path="*" />

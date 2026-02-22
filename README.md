@@ -95,11 +95,21 @@ If runtime config is empty, the app falls back to `VITE_SUPABASE_URL` and `VITE_
 ## Run CI Checks Locally
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm format:check
-pnpm -r lint
-pnpm -r test
-pnpm -r build
+./scripts/ci-local.sh
+```
+
+## Enable Git Hooks
+
+```bash
+git config core.hooksPath .githooks
+```
+
+After this, every `git push` runs local CI checks via `.githooks/pre-push`.
+
+## Push And Open A PR
+
+```bash
+./scripts/open-pr.sh
 ```
 
 ## Workspace Overview

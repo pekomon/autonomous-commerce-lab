@@ -14,6 +14,17 @@ The reviewer is read-only and must not modify code.
 - Language policy is respected (English only).
 - No secrets or unsafe CI requirements are introduced.
 
+## Standard Local Checks
+
+Run the standard checks from the repository root:
+
+```bash
+pnpm format:check
+pnpm -r lint
+pnpm -r test
+pnpm -r build
+```
+
 ## Output Format
 
 Use the following PR-ready structure:

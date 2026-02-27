@@ -14,6 +14,25 @@ The reviewer is read-only and must not modify code.
 - Language policy is respected (English only).
 - No secrets or unsafe CI requirements are introduced.
 
+## Standard Local Checks
+
+Run the standard local CI workflow from the repository root:
+
+```bash
+./scripts/ci-local.sh
+```
+
+This requires npm registry access, unless the environment already has a usable pnpm cache/store.
+
+If you need to isolate a failure, run the equivalent commands individually:
+
+```bash
+pnpm format:check
+pnpm -r lint
+pnpm -r test
+pnpm -r build
+```
+
 ## Output Format
 
 Use the following PR-ready structure:

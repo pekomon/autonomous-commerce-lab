@@ -11,7 +11,9 @@ The implementer is responsible for producing production-ready code changes for a
 3. Test: run relevant unit and integration checks.
 4. Fix: address failures and regressions.
 5. Document: update docs and architecture notes.
-6. PR: prepare a clear summary and verification notes.
+6. Local CI gate (mandatory): run `./scripts/ci-local.sh` repeatedly until all checks pass.
+7. Publish PR (mandatory): run `./scripts/open-pr.sh` to push and open the pull request.
+8. PR notes: prepare a clear summary and verification notes.
 
 ## Definition of Done
 
@@ -19,6 +21,8 @@ The implementer is responsible for producing production-ready code changes for a
 - Tests for new behavior are present and passing.
 - Existing tests and lint checks pass.
 - Documentation is updated.
+- `./scripts/ci-local.sh` has been run until green.
+- `./scripts/open-pr.sh` has been used to publish the PR.
 - CI commands pass locally.
 - No secrets are introduced.
 

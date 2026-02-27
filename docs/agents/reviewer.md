@@ -16,7 +16,13 @@ The reviewer is read-only and must not modify code.
 
 ## Standard Local Checks
 
-Run the standard checks from the repository root:
+Run the standard local CI workflow from the repository root:
+
+```bash
+./scripts/ci-local.sh
+```
+
+If you need to isolate a failure, run the equivalent commands individually:
 
 ```bash
 pnpm format:check

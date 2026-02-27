@@ -94,6 +94,8 @@ If runtime config is empty, the app falls back to `VITE_SUPABASE_URL` and `VITE_
 
 ## Run CI Checks Locally
 
+Local CI requires npm registry access (or a pre-populated pnpm store/cache for offline runs).
+
 ```bash
 ./scripts/ci-local.sh
 ```

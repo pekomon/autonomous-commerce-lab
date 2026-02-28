@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { useCart } from '../cart/CartProvider';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
 import { StorefrontHeader } from '../components/StorefrontHeader';
 import {
   fetchCategories,
@@ -25,6 +28,7 @@ export function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -78,7 +82,7 @@ export function ProductDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [client, id]);
+  }, [client, id, reloadKey]);
 
   const activeImage = useMemo(() => images[activeImageIndex] ?? null, [activeImageIndex, images]);
 
@@ -104,10 +108,23 @@ export function ProductDetailPage() {
     <div className="storefront-shell">
       <StorefrontHeader subtitle="Public product detail from Supabase." title="Product Detail" />
 
-      {loading ? <p>Loading product details...</p> : null}
-      {error ? <p className="error-message">{error}</p> : null}
+      {loading ? <LoadingState label="Loading product details..." /> : null}
 
-      {!loading && !error && !product ? <p>Product not found.</p> : null}
+      {!loading && error ? (
+        <ErrorState
+          message={error}
+          onRetry={() => setReloadKey((current) => current + 1)}
+          retryLabel="Retry"
+          title="Unable to load product"
+        />
+      ) : null}
+
+      {!loading && !error && !product ? (
+        <EmptyState
+          description="The product may have been removed or is no longer available."
+          title="Product not found."
+        />
+      ) : null}
 
       {!loading && !error && product ? (
         <section className="detail-layout">

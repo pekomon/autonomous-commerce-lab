@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { AdminHeader } from '../components/AdminHeader';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
 import { filterAndSortProducts, type ProductSortOption } from '../catalogLogic';
 import { supabase } from '../lib/supabaseClient';
 import { mapDbRowToProduct, type ProductDbRow } from '../products/productMappers';
@@ -41,6 +44,7 @@ export function ProductsListPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -74,11 +78,11 @@ export function ProductsListPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const visibleProducts = useMemo(() => {
     return filterAndSortProducts(products, { query, status, sort });
-  }, [products, query, status, sort]);
+  }, [products, query, sort, status]);
 
   return (
     <div className="app-shell">
@@ -138,13 +142,29 @@ export function ProductsListPage() {
           </label>
         </div>
 
-        {loading ? <p>Loading products...</p> : null}
-        {error ? <p className="error-message">{error}</p> : null}
+        {loading ? <LoadingState label="Loading products..." /> : null}
+
+        {!loading && error ? (
+          <ErrorState
+            message={error}
+            onRetry={() => setReloadKey((current) => current + 1)}
+            retryLabel="Retry"
+            title="Unable to load products"
+          />
+        ) : null}
+
         {!loading && !error ? (
           <p className="results-count">{visibleProducts.length} product(s) found</p>
         ) : null}
 
-        {!loading && !error ? (
+        {!loading && !error && visibleProducts.length === 0 ? (
+          <EmptyState
+            description="Adjust the current filters or create a new product."
+            title="No products match the current filters."
+          />
+        ) : null}
+
+        {!loading && !error && visibleProducts.length > 0 ? (
           <table>
             <thead>
               <tr>
@@ -156,27 +176,19 @@ export function ProductsListPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleProducts.length === 0 ? (
-                <tr>
-                  <td className="empty-state" colSpan={5}>
-                    No products match the current filters.
+              {visibleProducts.map((product) => (
+                <tr key={product.id}>
+                  <td>
+                    <Link to={`/products/${product.id}`}>{product.title}</Link>
+                  </td>
+                  <td>{product.status}</td>
+                  <td>{formatMoney(product.price, product.currency)}</td>
+                  <td>{new Date(product.createdAt).toLocaleDateString('en-US')}</td>
+                  <td>
+                    <Link to={`/products/${product.id}/edit`}>Edit</Link>
                   </td>
                 </tr>
-              ) : (
-                visibleProducts.map((product) => (
-                  <tr key={product.id}>
-                    <td>
-                      <Link to={`/products/${product.id}`}>{product.title}</Link>
-                    </td>
-                    <td>{product.status}</td>
-                    <td>{formatMoney(product.price, product.currency)}</td>
-                    <td>{new Date(product.createdAt).toLocaleDateString('en-US')}</td>
-                    <td>
-                      <Link to={`/products/${product.id}/edit`}>Edit</Link>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         ) : null}

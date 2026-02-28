@@ -16,6 +16,9 @@ import {
   toCategoryWriteErrorMessage,
 } from '../categories/categoryErrors';
 import { AdminHeader } from '../components/AdminHeader';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
 
 interface CategoryFormValues {
   slug: string;
@@ -30,7 +33,9 @@ const EMPTY_FORM: CategoryFormValues = {
 export function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const [createValues, setCreateValues] = useState<CategoryFormValues>(EMPTY_FORM);
   const [creating, setCreating] = useState(false);
@@ -45,7 +50,7 @@ export function CategoriesPage() {
 
     async function loadCategories() {
       setLoading(true);
-      setError(null);
+      setLoadError(null);
 
       try {
         const data = await fetchCategories();
@@ -60,7 +65,7 @@ export function CategoriesPage() {
           return;
         }
 
-        setError(
+        setLoadError(
           fetchError instanceof Error
             ? toCategoryReadErrorMessage(fetchError)
             : 'Unable to load categories.',
@@ -77,7 +82,7 @@ export function CategoriesPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   function validateForm(values: CategoryFormValues): string | null {
     const normalizedSlug = normalizeCategorySlug(values.slug);
@@ -95,11 +100,11 @@ export function CategoriesPage() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
+    setFormError(null);
 
     const validationError = validateForm(createValues);
     if (validationError) {
-      setError(validationError);
+      setFormError(validationError);
       return;
     }
 
@@ -110,7 +115,7 @@ export function CategoriesPage() {
       setCategories((current) => [createdCategory, ...current]);
       setCreateValues(EMPTY_FORM);
     } catch (createError) {
-      setError(
+      setFormError(
         createError instanceof Error
           ? toCategoryWriteErrorMessage(createError)
           : 'Unable to create category.',
@@ -126,7 +131,7 @@ export function CategoriesPage() {
       slug: category.slug,
       name: category.name,
     });
-    setError(null);
+    setFormError(null);
   }
 
   function cancelEdit() {
@@ -135,11 +140,11 @@ export function CategoriesPage() {
   }
 
   async function handleSaveEdit(categoryId: string) {
-    setError(null);
+    setFormError(null);
 
     const validationError = validateForm(editValues);
     if (validationError) {
-      setError(validationError);
+      setFormError(validationError);
       return;
     }
 
@@ -155,7 +160,7 @@ export function CategoriesPage() {
       );
       cancelEdit();
     } catch (updateError) {
-      setError(
+      setFormError(
         updateError instanceof Error
           ? toCategoryWriteErrorMessage(updateError)
           : 'Unable to save category changes.',
@@ -167,7 +172,7 @@ export function CategoriesPage() {
 
   async function handleDelete(categoryId: string) {
     setActiveDeleteId(categoryId);
-    setError(null);
+    setFormError(null);
 
     try {
       await deleteCategory(categoryId);
@@ -177,7 +182,7 @@ export function CategoriesPage() {
         cancelEdit();
       }
     } catch (deleteError) {
-      setError(
+      setFormError(
         deleteError instanceof Error
           ? toCategoryWriteErrorMessage(deleteError)
           : 'Unable to delete category.',
@@ -221,6 +226,8 @@ export function CategoriesPage() {
             />
           </label>
 
+          {formError ? <ErrorState message={formError} title="Category update failed" /> : null}
+
           <div className="inline-actions">
             <button className="primary-button" disabled={creating} type="submit">
               {creating ? 'Creating...' : 'Create Category'}
@@ -232,10 +239,25 @@ export function CategoriesPage() {
       <section>
         <h2>Category List</h2>
 
-        {loading ? <p>Loading categories...</p> : null}
-        {error ? <p className="error-message">{error}</p> : null}
+        {loading ? <LoadingState label="Loading categories..." /> : null}
 
-        {!loading ? (
+        {!loading && loadError ? (
+          <ErrorState
+            message={loadError}
+            onRetry={() => setReloadKey((current) => current + 1)}
+            retryLabel="Retry"
+            title="Unable to load categories"
+          />
+        ) : null}
+
+        {!loading && !loadError && categories.length === 0 ? (
+          <EmptyState
+            description="Create your first category to organize products."
+            title="No categories yet."
+          />
+        ) : null}
+
+        {!loading && !loadError && categories.length > 0 ? (
           <table>
             <thead>
               <tr>
@@ -246,92 +268,84 @@ export function CategoriesPage() {
               </tr>
             </thead>
             <tbody>
-              {categories.length === 0 ? (
-                <tr>
-                  <td className="empty-state" colSpan={4}>
-                    No categories yet.
-                  </td>
-                </tr>
-              ) : (
-                categories.map((category) => {
-                  const isEditing = editingId === category.id;
-                  const isDeleting = activeDeleteId === category.id;
+              {categories.map((category) => {
+                const isEditing = editingId === category.id;
+                const isDeleting = activeDeleteId === category.id;
 
-                  return (
-                    <tr key={category.id}>
-                      <td>
+                return (
+                  <tr key={category.id}>
+                    <td>
+                      {isEditing ? (
+                        <input
+                          onChange={(event) =>
+                            setEditValues((current) => ({ ...current, name: event.target.value }))
+                          }
+                          type="text"
+                          value={editValues.name}
+                        />
+                      ) : (
+                        category.name
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <input
+                          onChange={(event) =>
+                            setEditValues((current) => ({ ...current, slug: event.target.value }))
+                          }
+                          type="text"
+                          value={editValues.slug}
+                        />
+                      ) : (
+                        category.slug
+                      )}
+                    </td>
+                    <td>{new Date(category.createdAt).toLocaleDateString('en-US')}</td>
+                    <td>
+                      <div className="inline-actions">
                         {isEditing ? (
-                          <input
-                            onChange={(event) =>
-                              setEditValues((current) => ({ ...current, name: event.target.value }))
-                            }
-                            type="text"
-                            value={editValues.name}
-                          />
-                        ) : (
-                          category.name
-                        )}
-                      </td>
-                      <td>
-                        {isEditing ? (
-                          <input
-                            onChange={(event) =>
-                              setEditValues((current) => ({ ...current, slug: event.target.value }))
-                            }
-                            type="text"
-                            value={editValues.slug}
-                          />
-                        ) : (
-                          category.slug
-                        )}
-                      </td>
-                      <td>{new Date(category.createdAt).toLocaleDateString('en-US')}</td>
-                      <td>
-                        <div className="inline-actions">
-                          {isEditing ? (
-                            <>
-                              <button
-                                className="primary-button"
-                                disabled={savingEdit || isDeleting}
-                                onClick={() => void handleSaveEdit(category.id)}
-                                type="button"
-                              >
-                                {savingEdit ? 'Saving...' : 'Save'}
-                              </button>
-                              <button
-                                className="secondary-button"
-                                disabled={savingEdit || isDeleting}
-                                onClick={cancelEdit}
-                                type="button"
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
+                          <>
                             <button
-                              className="secondary-button"
-                              disabled={isDeleting}
-                              onClick={() => startEdit(category)}
+                              className="primary-button"
+                              disabled={savingEdit || isDeleting}
+                              onClick={() => void handleSaveEdit(category.id)}
                               type="button"
                             >
-                              Edit
+                              {savingEdit ? 'Saving...' : 'Save'}
                             </button>
-                          )}
-
+                            <button
+                              className="secondary-button"
+                              disabled={savingEdit || isDeleting}
+                              onClick={cancelEdit}
+                              type="button"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
                           <button
-                            className="danger-button"
-                            disabled={savingEdit || isDeleting}
-                            onClick={() => void handleDelete(category.id)}
+                            className="secondary-button"
+                            disabled={isDeleting}
+                            onClick={() => startEdit(category)}
                             type="button"
                           >
-                            {isDeleting ? 'Deleting...' : 'Delete'}
+                            Edit
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+                        )}
+
+                        <button
+                          className="danger-button"
+                          disabled={savingEdit || isDeleting}
+                          onClick={() => void handleDelete(category.id)}
+                          type="button"
+                        >
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         ) : null}

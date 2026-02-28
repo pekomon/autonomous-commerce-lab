@@ -3,6 +3,9 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { AdminHeader } from '../components/AdminHeader';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
 import { ProductCategoryAssignment } from '../components/ProductCategoryAssignment';
 import { ProductImagesManager } from '../components/ProductImagesManager';
 import { supabase } from '../lib/supabaseClient';
@@ -43,27 +46,33 @@ export function ProductFormPage() {
   const [values, setValues] = useState<ProductFormValues>(EMPTY_FORM);
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadProductForEdit(productId: string) {
       setLoading(true);
-      setError(null);
+      setLoadError(null);
+      setNotFound(false);
 
       const { data, error: fetchError } = await supabase
         .from('products')
         .select(PRODUCT_SELECT)
         .eq('id', productId)
-        .single();
+        .maybeSingle();
 
       if (!isMounted) {
         return;
       }
 
       if (fetchError) {
-        setError('Unable to load product for editing.');
+        setLoadError('Unable to load product for editing.');
+      } else if (!data) {
+        setNotFound(true);
       } else {
         const row = data as ProductDbRow;
         setValues({
@@ -87,22 +96,24 @@ export function ProductFormPage() {
     } else {
       setLoading(false);
       setValues(EMPTY_FORM);
+      setLoadError(null);
+      setNotFound(false);
     }
 
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, reloadKey]);
 
   const title = useMemo(() => (isEdit ? 'Edit Product' : 'Create Product'), [isEdit]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setError(null);
+    setFormError(null);
 
     if (!isNonEmptyTitle(values.title)) {
-      setError('Title is required and cannot be empty.');
+      setFormError('Title is required and cannot be empty.');
       setSaving(false);
       return;
     }
@@ -110,7 +121,7 @@ export function ProductFormPage() {
     const parsedPriceAmount = Number(values.priceAmount);
 
     if (!Number.isInteger(parsedPriceAmount) || parsedPriceAmount < 0) {
-      setError('Price amount must be a non-negative integer.');
+      setFormError('Price amount must be a non-negative integer.');
       setSaving(false);
       return;
     }
@@ -130,7 +141,7 @@ export function ProductFormPage() {
       const { error: updateError } = await supabase.from('products').update(payload).eq('id', id);
 
       if (updateError) {
-        setError(toProductWriteErrorMessage(updateError));
+        setFormError(toProductWriteErrorMessage(updateError));
       } else {
         navigate(`/products/${id}`);
       }
@@ -142,7 +153,7 @@ export function ProductFormPage() {
         .single();
 
       if (insertError) {
-        setError(toProductWriteErrorMessage(insertError));
+        setFormError(toProductWriteErrorMessage(insertError));
       } else {
         navigate(`/products/${data.id}`);
       }
@@ -157,7 +168,7 @@ export function ProductFormPage() {
     }
 
     setSaving(true);
-    setError(null);
+    setFormError(null);
 
     const { error: updateError } = await supabase
       .from('products')
@@ -165,7 +176,7 @@ export function ProductFormPage() {
       .eq('id', id);
 
     if (updateError) {
-      setError(toProductWriteErrorMessage(updateError));
+      setFormError(toProductWriteErrorMessage(updateError));
       setSaving(false);
       return;
     }
@@ -176,7 +187,38 @@ export function ProductFormPage() {
   if (loading) {
     return (
       <div className="app-shell">
-        <p>Loading form...</p>
+        <LoadingState label="Loading form..." />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="app-shell">
+        <AdminHeader subtitle="Manage product data in Supabase." title={title} />
+        <ErrorState
+          message={loadError}
+          onRetry={() => setReloadKey((current) => current + 1)}
+          retryLabel="Retry"
+          title="Unable to open product form"
+        />
+      </div>
+    );
+  }
+
+  if (isEdit && notFound) {
+    return (
+      <div className="app-shell">
+        <AdminHeader subtitle="Manage product data in Supabase." title={title} />
+        <EmptyState
+          action={
+            <Link className="secondary-button" to="/products">
+              Back to products
+            </Link>
+          }
+          description="This product may have been removed."
+          title="Product not found."
+        />
       </div>
     );
   }
@@ -272,7 +314,9 @@ export function ProductFormPage() {
             />
           </label>
 
-          {error ? <p className="error-message">{error}</p> : null}
+          {formError ? (
+            <ErrorState message={formError} title="Please review and try again" />
+          ) : null}
 
           <div className="inline-actions">
             <button className="primary-button" disabled={saving} type="submit">
@@ -302,7 +346,10 @@ export function ProductFormPage() {
       ) : (
         <section>
           <h2>Product Images</h2>
-          <p>Create the product first to upload images.</p>
+          <EmptyState
+            description="Create this product first, then upload and manage images from its detail page."
+            title="No images yet"
+          />
         </section>
       )}
     </div>

@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { AdminHeader } from '../components/AdminHeader';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
 import { toOrderReadErrorMessage } from '../orders/orderErrors';
 import { filterOrdersByStatus } from '../orders/orderLogic';
 import {
@@ -35,6 +38,7 @@ export function OrdersListPage() {
   const [status, setStatus] = useState<OrderStatusFilter>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -70,7 +74,7 @@ export function OrdersListPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const visibleOrders = useMemo(() => {
     return filterOrdersByStatus(orders, status);
@@ -102,14 +106,29 @@ export function OrdersListPage() {
           </label>
         </div>
 
-        {loading ? <p>Loading orders...</p> : null}
-        {error ? <p className="error-message">{error}</p> : null}
+        {loading ? <LoadingState label="Loading orders..." /> : null}
+
+        {!loading && error ? (
+          <ErrorState
+            message={error}
+            onRetry={() => setReloadKey((current) => current + 1)}
+            retryLabel="Retry"
+            title="Unable to load orders"
+          />
+        ) : null}
 
         {!loading && !error ? (
           <p className="results-count">{visibleOrders.length} order(s) found</p>
         ) : null}
 
-        {!loading && !error ? (
+        {!loading && !error && visibleOrders.length === 0 ? (
+          <EmptyState
+            description="Try a different status filter or wait for new orders."
+            title="No orders match the current filter."
+          />
+        ) : null}
+
+        {!loading && !error && visibleOrders.length > 0 ? (
           <table>
             <thead>
               <tr>
@@ -123,27 +142,19 @@ export function OrdersListPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleOrders.length === 0 ? (
-                <tr>
-                  <td className="empty-state" colSpan={7}>
-                    No orders match the current filter.
+              {visibleOrders.map((order) => (
+                <tr key={order.id}>
+                  <td>{new Date(order.createdAt).toLocaleString('en-US')}</td>
+                  <td>{order.status}</td>
+                  <td>{formatOrderAmount(order.totalAmount, order.currency)}</td>
+                  <td>{order.currency}</td>
+                  <td title={order.userId}>{shortenUserId(order.userId)}</td>
+                  <td>{order.itemCount}</td>
+                  <td>
+                    <Link to={`/orders/${order.id}`}>View</Link>
                   </td>
                 </tr>
-              ) : (
-                visibleOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{new Date(order.createdAt).toLocaleString('en-US')}</td>
-                    <td>{order.status}</td>
-                    <td>{formatOrderAmount(order.totalAmount, order.currency)}</td>
-                    <td>{order.currency}</td>
-                    <td title={order.userId}>{shortenUserId(order.userId)}</td>
-                    <td>{order.itemCount}</td>
-                    <td>
-                      <Link to={`/orders/${order.id}`}>View</Link>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         ) : null}

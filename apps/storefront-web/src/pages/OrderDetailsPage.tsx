@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { useAuth } from '../auth/AuthProvider';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
 import { StorefrontHeader } from '../components/StorefrontHeader';
 import { useSupabase } from '../lib/SupabaseContext';
 import { fetchMyOrderDetails, toOrderErrorMessage, type OrderDetails } from '../orders/ordersApi';
@@ -23,6 +26,7 @@ export function OrderDetailsPage() {
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -68,7 +72,7 @@ export function OrderDetailsPage() {
     return () => {
       isMounted = false;
     };
-  }, [client, id, user]);
+  }, [client, id, reloadKey, user]);
 
   return (
     <div className="storefront-shell">
@@ -76,14 +80,32 @@ export function OrderDetailsPage() {
 
       <section>
         {!client ? (
-          <p className="error-message">{configError ?? 'Storefront configuration is missing.'}</p>
+          <ErrorState
+            details="Add values to .env.local for local development, or provide public/config.json for runtime deployment config."
+            message={configError ?? 'Storefront configuration is missing.'}
+            title="Storefront configuration required"
+          />
         ) : null}
-        {loading ? <p>Loading order...</p> : null}
-        {error ? <p className="error-message">{error}</p> : null}
 
-        {!loading && !error && !order ? <p>Order not found.</p> : null}
+        {client && loading ? <LoadingState label="Loading order..." /> : null}
 
-        {!loading && !error && order ? (
+        {client && !loading && error ? (
+          <ErrorState
+            message={error}
+            onRetry={() => setReloadKey((current) => current + 1)}
+            retryLabel="Retry"
+            title="Unable to load order"
+          />
+        ) : null}
+
+        {client && !loading && !error && !order ? (
+          <EmptyState
+            description="The order may not exist or you may not have access to it."
+            title="Order not found."
+          />
+        ) : null}
+
+        {client && !loading && !error && order ? (
           <>
             <p>
               <strong>Order ID:</strong> {order.id}

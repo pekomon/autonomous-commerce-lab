@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../auth/AuthProvider';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
 import { StorefrontHeader } from '../components/StorefrontHeader';
 import { useSupabase } from '../lib/SupabaseContext';
 import { fetchMyOrders, toOrderErrorMessage, type OrderSummary } from '../orders/ordersApi';
@@ -22,6 +25,7 @@ export function OrdersPage() {
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -61,7 +65,7 @@ export function OrdersPage() {
     return () => {
       isMounted = false;
     };
-  }, [client, user]);
+  }, [client, reloadKey, user]);
 
   return (
     <div className="storefront-shell">
@@ -69,31 +73,51 @@ export function OrdersPage() {
 
       <section>
         {!client ? (
-          <p className="error-message">{configError ?? 'Storefront configuration is missing.'}</p>
+          <ErrorState
+            details="Add values to .env.local for local development, or provide public/config.json for runtime deployment config."
+            message={configError ?? 'Storefront configuration is missing.'}
+            title="Storefront configuration required"
+          />
         ) : null}
-        {loading ? <p>Loading orders...</p> : null}
-        {error ? <p className="error-message">{error}</p> : null}
 
-        {!loading && !error && orders.length === 0 ? <p>You have no orders yet.</p> : null}
+        {client && loading ? <LoadingState label="Loading orders..." /> : null}
 
-        <div className="order-list">
-          {orders.map((order) => (
-            <article className="order-row" key={order.id}>
-              <div>
-                <h3>
-                  <Link to={`/orders/${order.id}`}>Order {order.id.slice(0, 8)}</Link>
-                </h3>
-                <p>
-                  Status: <strong>{order.status}</strong>
+        {client && !loading && error ? (
+          <ErrorState
+            message={error}
+            onRetry={() => setReloadKey((current) => current + 1)}
+            retryLabel="Retry"
+            title="Unable to load orders"
+          />
+        ) : null}
+
+        {client && !loading && !error && orders.length === 0 ? (
+          <EmptyState
+            description="Place your first order from the products page."
+            title="You have no orders yet."
+          />
+        ) : null}
+
+        {client && !loading && !error && orders.length > 0 ? (
+          <div className="order-list">
+            {orders.map((order) => (
+              <article className="order-row" key={order.id}>
+                <div>
+                  <h3>
+                    <Link to={`/orders/${order.id}`}>Order {order.id.slice(0, 8)}</Link>
+                  </h3>
+                  <p>
+                    Status: <strong>{order.status}</strong>
+                  </p>
+                  <p>{new Date(order.createdAt).toLocaleString()}</p>
+                </div>
+                <p className="product-price">
+                  {formatMinorAmount(order.totalAmount, order.currency)}
                 </p>
-                <p>{new Date(order.createdAt).toLocaleString()}</p>
-              </div>
-              <p className="product-price">
-                {formatMinorAmount(order.totalAmount, order.currency)}
-              </p>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
       </section>
     </div>
   );

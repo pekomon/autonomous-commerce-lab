@@ -76,6 +76,9 @@ Workflow added: `.github/workflows/storefront-pages.yml`
 - Uploads pages artifact from `apps/storefront-web/dist`
 - Deploys with `actions/deploy-pages`
 - No secrets are required for the workflow itself
+- Production asset base path is configured in `apps/storefront-web/vite.config.ts` as `/autonomous-commerce-lab/`
+- Router strategy uses `BrowserRouter` basename from `import.meta.env.BASE_URL`
+- Workflow copies `dist/index.html` to `dist/404.html` so GitHub Pages deep links are routed back to the SPA shell
 
 ### Configure Runtime Values for Production
 

@@ -55,7 +55,7 @@ jobs:
           EOF
 
       - name: Build storefront
-        run: pnpm --filter @autonomous-commerce-lab/storefront-web build -- --base "/${{ github.event.repository.name }}/"
+        run: pnpm --filter @autonomous-commerce-lab/storefront-web build
 
       - name: Add SPA fallback page
         run: cp apps/storefront-web/dist/index.html apps/storefront-web/dist/404.html

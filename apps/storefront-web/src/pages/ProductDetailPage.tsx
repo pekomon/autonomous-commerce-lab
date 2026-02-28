@@ -92,11 +92,11 @@ export function ProductDetailPage() {
         <StorefrontHeader subtitle="Public product detail from Supabase." title="Product Detail" />
 
         <section>
-          <p className="error-message">{configError ?? 'Storefront configuration is missing.'}</p>
-          <p>
-            Add values to <code>.env.local</code> for local development, or provide
-            <code> public/config.json</code> for runtime deployment config.
-          </p>
+          <ErrorState
+            details="Add values to .env.local for local development, or provide public/config.json for runtime deployment config."
+            message={configError ?? 'Storefront configuration is missing.'}
+            title="Storefront configuration required"
+          />
         </section>
 
         <Link to="/products">Back to products</Link>

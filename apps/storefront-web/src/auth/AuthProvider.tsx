@@ -1,3 +1,4 @@
+import { toFriendlyAuthErrorMessage } from '@autonomous-commerce-lab/shared';
 import type { Session, User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -62,27 +63,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user: session?.user ?? null,
       signInWithPassword: async (email, password) => {
         if (!client) {
-          return 'Supabase client is not configured.';
+          return 'Storefront configuration is missing.';
         }
 
         const { error } = await client.auth.signInWithPassword({ email, password });
-        return error?.message ?? null;
+        return error ? toFriendlyAuthErrorMessage(error, 'signIn') : null;
       },
       signUpWithPassword: async (email, password) => {
         if (!client) {
-          return 'Supabase client is not configured.';
+          return 'Storefront configuration is missing.';
         }
 
         const { error } = await client.auth.signUp({ email, password });
-        return error?.message ?? null;
+        return error ? toFriendlyAuthErrorMessage(error, 'signUp') : null;
       },
       signOut: async () => {
         if (!client) {
-          return 'Supabase client is not configured.';
+          return 'Storefront configuration is missing.';
         }
 
         const { error } = await client.auth.signOut();
-        return error?.message ?? null;
+        return error ? toFriendlyAuthErrorMessage(error, 'signOut') : null;
       },
     };
   }, [client, loading, session]);

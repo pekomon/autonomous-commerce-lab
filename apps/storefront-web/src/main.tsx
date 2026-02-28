@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
 import { CartProvider } from './cart/CartProvider';
+import { AppErrorBoundary } from './components/AppErrorBoundary';
 import { SupabaseProvider } from './lib/SupabaseContext';
 import { loadRuntimeSupabaseConfig } from './lib/runtimeConfig';
 import { createSupabaseClientState } from './lib/supabaseClient';
@@ -16,15 +17,17 @@ async function bootstrap() {
 
   createRoot(document.getElementById('root') as HTMLElement).render(
     <StrictMode>
-      <SupabaseProvider value={supabaseState}>
-        <BrowserRouter basename={import.meta.env.BASE_URL}>
-          <AuthProvider>
-            <CartProvider>
-              <App />
-            </CartProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </SupabaseProvider>
+      <AppErrorBoundary>
+        <SupabaseProvider value={supabaseState}>
+          <BrowserRouter basename={import.meta.env.BASE_URL}>
+            <AuthProvider>
+              <CartProvider>
+                <App />
+              </CartProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </SupabaseProvider>
+      </AppErrorBoundary>
     </StrictMode>,
   );
 }

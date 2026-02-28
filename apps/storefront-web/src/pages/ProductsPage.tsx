@@ -1,6 +1,9 @@
 import type { Category } from '@autonomous-commerce-lab/shared';
 import { useEffect, useState } from 'react';
 
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import { LoadingState } from '../components/LoadingState';
 import { ProductCard } from '../components/ProductCard';
 import { StorefrontHeader } from '../components/StorefrontHeader';
 import { fetchCategories, fetchProducts, type StorefrontProductCard } from '../data/storefrontApi';
@@ -30,6 +33,8 @@ export function ProductsPage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [categoryReloadKey, setCategoryReloadKey] = useState(0);
+  const [productsReloadKey, setProductsReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -69,7 +74,7 @@ export function ProductsPage() {
     return () => {
       isMounted = false;
     };
-  }, [client]);
+  }, [categoryReloadKey, client]);
 
   useEffect(() => {
     let isMounted = true;
@@ -113,7 +118,7 @@ export function ProductsPage() {
     return () => {
       isMounted = false;
     };
-  }, [categoryId, client, query, sort]);
+  }, [categoryId, client, productsReloadKey, query, sort]);
 
   if (!client) {
     return (
@@ -124,11 +129,11 @@ export function ProductsPage() {
         />
 
         <section>
-          <p className="error-message">{configError ?? 'Storefront configuration is missing.'}</p>
-          <p>
-            Add values to <code>.env.local</code> for local development, or provide
-            <code> public/config.json</code> for runtime deployment config.
-          </p>
+          <ErrorState
+            details="Add values to .env.local for local development, or provide public/config.json for runtime deployment config."
+            message={configError ?? 'Storefront configuration is missing.'}
+            title="Storefront configuration required"
+          />
         </section>
       </div>
     );
@@ -189,21 +194,44 @@ export function ProductsPage() {
           </label>
         </div>
 
-        {loadingProducts ? <p>Loading products...</p> : null}
-        {categoryError ? <p className="error-message">{categoryError}</p> : null}
-        {productsError ? <p className="error-message">{productsError}</p> : null}
+        {loadingCategories ? <LoadingState label="Loading category filters..." /> : null}
+
+        {categoryError ? (
+          <ErrorState
+            message={categoryError}
+            onRetry={() => setCategoryReloadKey((current) => current + 1)}
+            retryLabel="Retry categories"
+            title="Category filters unavailable"
+          />
+        ) : null}
+
+        {loadingProducts ? <LoadingState label="Loading products..." /> : null}
+
+        {!loadingProducts && productsError ? (
+          <ErrorState
+            message={productsError}
+            onRetry={() => setProductsReloadKey((current) => current + 1)}
+            retryLabel="Retry products"
+            title="Unable to load products"
+          />
+        ) : null}
 
         {!loadingProducts && !productsError ? <p>{products.length} product(s) found</p> : null}
 
         {!loadingProducts && !productsError && products.length === 0 ? (
-          <p>No products found.</p>
+          <EmptyState
+            description="Try changing your search terms, category filter, or sort order."
+            title="No products found."
+          />
         ) : null}
 
-        <div className="product-grid">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {!loadingProducts && !productsError && products.length > 0 ? (
+          <div className="product-grid">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : null}
       </section>
     </div>
   );

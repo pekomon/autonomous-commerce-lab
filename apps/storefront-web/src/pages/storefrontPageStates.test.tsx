@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -140,6 +140,27 @@ describe('storefront page states', () => {
     expect(await screen.findByText('Unable to load categories.')).toBeTruthy();
     expect(await screen.findByText('0 product(s) found')).toBeTruthy();
     expect(screen.queryByText('Unable to load products. Please try again.')).toBeNull();
+  });
+
+  it('ProductsPage retries product fetch when retry button is clicked', async () => {
+    supabaseState.client = {};
+    supabaseState.configError = null;
+
+    storefrontApiMocks.fetchCategories.mockResolvedValueOnce([]);
+    storefrontApiMocks.fetchProducts
+      .mockRejectedValueOnce(new Error('temporary failure'))
+      .mockResolvedValueOnce([]);
+
+    renderProductsPage();
+
+    expect(await screen.findByText('Unable to load products. Please try again.')).toBeTruthy();
+    expect(storefrontApiMocks.fetchProducts).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry products' }));
+
+    await waitFor(() => {
+      expect(storefrontApiMocks.fetchProducts).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('ProductDetailPage shows config guidance without product not found state when config is missing', () => {

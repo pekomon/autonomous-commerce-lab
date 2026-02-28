@@ -1,3 +1,4 @@
+import { toFriendlyAuthErrorMessage } from '@autonomous-commerce-lab/shared';
 import type { Session, User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
@@ -50,15 +51,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: session?.user ?? null,
       signInWithPassword: async (email, password) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        return error?.message ?? null;
+        return error ? toFriendlyAuthErrorMessage(error, 'signIn') : null;
       },
       signUpWithPassword: async (email, password) => {
         const { error } = await supabase.auth.signUp({ email, password });
-        return error?.message ?? null;
+        return error ? toFriendlyAuthErrorMessage(error, 'signUp') : null;
       },
       signOut: async () => {
         const { error } = await supabase.auth.signOut();
-        return error?.message ?? null;
+        return error ? toFriendlyAuthErrorMessage(error, 'signOut') : null;
       },
     };
   }, [loading, session]);

@@ -152,6 +152,41 @@ button {
   color: #4b5563;
 }
 
+.state-panel {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #f8fafc;
+}
+
+.state-panel h3,
+.state-panel p {
+  margin: 0;
+}
+
+.state-panel-error {
+  border-color: #fecdca;
+  background: #fff5f3;
+}
+
+.state-panel-loading {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.state-panel-empty {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.state-details {
+  color: #4b5563;
+  font-size: 13px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

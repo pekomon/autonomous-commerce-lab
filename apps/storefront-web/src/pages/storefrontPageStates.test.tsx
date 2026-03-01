@@ -59,6 +59,14 @@ import { HomePage } from './HomePage';
 import { ProductDetailPage } from './ProductDetailPage';
 import { ProductsPage } from './ProductsPage';
 
+const emptyProductsResult = {
+  hasMore: false,
+  items: [],
+  page: 1,
+  pageSize: 20,
+  total: 0,
+};
+
 const routerFuture = {
   v7_relativeSplatPath: true,
   v7_startTransition: true,
@@ -94,7 +102,7 @@ describe('storefront page states', () => {
     supabaseState.configError = 'Storefront configuration is missing.';
 
     storefrontApiMocks.fetchCategories.mockResolvedValue([]);
-    storefrontApiMocks.fetchProducts.mockResolvedValue([]);
+    storefrontApiMocks.fetchProducts.mockResolvedValue(emptyProductsResult);
     storefrontApiMocks.fetchProductById.mockResolvedValue(null);
     storefrontApiMocks.fetchProductImages.mockResolvedValue([]);
     storefrontApiMocks.fetchProductCategoryIds.mockResolvedValue([]);
@@ -128,7 +136,7 @@ describe('storefront page states', () => {
     supabaseState.configError = null;
 
     storefrontApiMocks.fetchCategories.mockRejectedValueOnce(new Error('category load failed'));
-    storefrontApiMocks.fetchProducts.mockResolvedValueOnce([]);
+    storefrontApiMocks.fetchProducts.mockResolvedValueOnce(emptyProductsResult);
 
     renderProductsPage();
 
@@ -149,7 +157,7 @@ describe('storefront page states', () => {
     storefrontApiMocks.fetchCategories.mockResolvedValueOnce([]);
     storefrontApiMocks.fetchProducts
       .mockRejectedValueOnce(new Error('temporary failure'))
-      .mockResolvedValueOnce([]);
+      .mockResolvedValueOnce(emptyProductsResult);
 
     renderProductsPage();
 

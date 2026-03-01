@@ -1,13 +1,14 @@
 import type { Category } from '@autonomous-commerce-lab/shared';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
-import { LoadingState } from '../components/LoadingState';
 import { ProductCard } from '../components/ProductCard';
+import { ProductGridSkeleton } from '../components/ProductGridSkeleton';
 import { StorefrontHeader } from '../components/StorefrontHeader';
 import { fetchCategories, fetchProducts, type StorefrontProductCard } from '../data/storefrontApi';
-import type { ProductSortOption } from '../data/storefrontHelpers';
+import { DEFAULT_PRODUCTS_PAGE_SIZE, type ProductSortOption } from '../data/storefrontHelpers';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useSupabase } from '../lib/SupabaseContext';
 
 const SORT_OPTIONS: ReadonlyArray<{ value: ProductSortOption; label: string }> = [
@@ -25,9 +26,13 @@ export function ProductsPage() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<StorefrontProductCard[]>([]);
-  const [query, setQuery] = useState('');
+  const [queryInput, setQueryInput] = useState('');
   const [categoryId, setCategoryId] = useState('all');
   const [sort, setSort] = useState<ProductSortOption>('newest');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalResults, setTotalResults] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -35,6 +40,10 @@ export function ProductsPage() {
   const [productsError, setProductsError] = useState<string | null>(null);
   const [categoryReloadKey, setCategoryReloadKey] = useState(0);
   const [productsReloadKey, setProductsReloadKey] = useState(0);
+  const requestIdRef = useRef(0);
+  const previousFilterKeyRef = useRef('');
+  const debouncedQuery = useDebouncedValue(queryInput, 300);
+  const filterKey = `${debouncedQuery.trim().toLowerCase()}|${categoryId}|${sort}`;
 
   useEffect(() => {
     let isMounted = true;
@@ -77,38 +86,74 @@ export function ProductsPage() {
   }, [categoryReloadKey, client]);
 
   useEffect(() => {
+    if (
+      previousFilterKeyRef.current !== '' &&
+      previousFilterKeyRef.current !== filterKey &&
+      page !== 1
+    ) {
+      previousFilterKeyRef.current = filterKey;
+      setProducts([]);
+      setPage(1);
+      setHasMore(false);
+      setTotalResults(0);
+      setProductsError(null);
+      return;
+    }
+
+    previousFilterKeyRef.current = filterKey;
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     let isMounted = true;
 
     async function loadProducts() {
       if (!client) {
         setLoadingProducts(false);
+        setLoadingMore(false);
         return;
       }
 
-      setLoadingProducts(true);
+      if (page === 1) {
+        setLoadingProducts(true);
+      } else {
+        setLoadingMore(true);
+      }
       setProductsError(null);
 
       try {
-        const productRows = await fetchProducts(client, {
-          query,
+        const productResponse = await fetchProducts(client, {
+          query: debouncedQuery,
           categoryId,
           sort,
+          page,
+          pageSize: DEFAULT_PRODUCTS_PAGE_SIZE,
         });
 
-        if (!isMounted) {
+        if (!isMounted || requestIdRef.current !== requestId) {
           return;
         }
 
-        setProducts(productRows);
+        setProducts((current) => {
+          if (page === 1) {
+            return productResponse.items;
+          }
+
+          const existingIds = new Set(current.map((product) => product.id));
+          const newItems = productResponse.items.filter((product) => !existingIds.has(product.id));
+          return [...current, ...newItems];
+        });
+        setHasMore(productResponse.hasMore);
+        setTotalResults(productResponse.total);
       } catch {
-        if (!isMounted) {
+        if (!isMounted || requestIdRef.current !== requestId) {
           return;
         }
 
         setProductsError('Unable to load products. Please try again.');
       } finally {
-        if (isMounted) {
+        if (isMounted && requestIdRef.current === requestId) {
           setLoadingProducts(false);
+          setLoadingMore(false);
         }
       }
     }
@@ -118,7 +163,7 @@ export function ProductsPage() {
     return () => {
       isMounted = false;
     };
-  }, [categoryId, client, productsReloadKey, query, sort]);
+  }, [categoryId, client, debouncedQuery, filterKey, page, productsReloadKey, sort]);
 
   if (!client) {
     return (
@@ -151,10 +196,10 @@ export function ProductsPage() {
           <label>
             Search
             <input
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => setQueryInput(event.target.value)}
               placeholder="Search title, description, or tags"
               type="search"
-              value={query}
+              value={queryInput}
             />
           </label>
 
@@ -194,7 +239,13 @@ export function ProductsPage() {
           </label>
         </div>
 
-        {loadingCategories ? <LoadingState label="Loading category filters..." /> : null}
+        {loadingCategories ? (
+          <div aria-hidden="true" className="category-skeleton-row">
+            <div className="skeleton-block skeleton-pill" />
+            <div className="skeleton-block skeleton-pill" />
+            <div className="skeleton-block skeleton-pill" />
+          </div>
+        ) : null}
 
         {categoryError ? (
           <ErrorState
@@ -205,18 +256,22 @@ export function ProductsPage() {
           />
         ) : null}
 
-        {loadingProducts ? <LoadingState label="Loading products..." /> : null}
+        {loadingProducts ? <ProductGridSkeleton /> : null}
 
         {!loadingProducts && productsError ? (
           <ErrorState
             message={productsError}
-            onRetry={() => setProductsReloadKey((current) => current + 1)}
+            onRetry={() => {
+              setProducts([]);
+              setPage(1);
+              setProductsReloadKey((current) => current + 1);
+            }}
             retryLabel="Retry products"
             title="Unable to load products"
           />
         ) : null}
 
-        {!loadingProducts && !productsError ? <p>{products.length} product(s) found</p> : null}
+        {!loadingProducts && !productsError ? <p>{totalResults} product(s) found</p> : null}
 
         {!loadingProducts && !productsError && products.length === 0 ? (
           <EmptyState
@@ -226,11 +281,31 @@ export function ProductsPage() {
         ) : null}
 
         {!loadingProducts && !productsError && products.length > 0 ? (
-          <div className="product-grid">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="product-grid">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            {loadingMore ? <ProductGridSkeleton count={3} /> : null}
+
+            {!loadingMore && hasMore ? (
+              <div className="pagination-actions">
+                <button
+                  className="secondary-button"
+                  onClick={() => setPage((current) => current + 1)}
+                  type="button"
+                >
+                  Load more
+                </button>
+              </div>
+            ) : null}
+
+            {!loadingMore && !hasMore ? (
+              <p className="pagination-complete">You have reached the end of the results.</p>
+            ) : null}
+          </>
         ) : null}
       </section>
     </div>

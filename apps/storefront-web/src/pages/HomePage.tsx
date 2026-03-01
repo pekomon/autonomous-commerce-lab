@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ProductCard } from '../components/ProductCard';
+import { ProductGridSkeleton } from '../components/ProductGridSkeleton';
 import { StorefrontHeader } from '../components/StorefrontHeader';
 import { fetchProducts, type StorefrontProductCard } from '../data/storefrontApi';
 import { useSupabase } from '../lib/SupabaseContext';
@@ -35,7 +36,7 @@ export function HomePage() {
           return;
         }
 
-        setProducts(newestProducts.slice(0, 6));
+        setProducts(newestProducts.items.slice(0, 6));
       } catch {
         if (!isMounted) {
           return;
@@ -88,7 +89,7 @@ export function HomePage() {
           <Link to="/products">View all products</Link>
         </div>
 
-        {loading ? <p>Loading featured products...</p> : null}
+        {loading ? <ProductGridSkeleton /> : null}
         {error ? <p className="error-message">{error}</p> : null}
 
         {!loading && !error && products.length === 0 ? <p>No products available yet.</p> : null}

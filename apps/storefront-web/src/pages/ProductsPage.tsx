@@ -46,6 +46,7 @@ export function ProductsPage() {
   const previousFilterKeyRef = useRef('');
   const debouncedQuery = useDebouncedValue(queryInput, 300);
   const filterKey = `${debouncedQuery.trim().toLowerCase()}|${categoryId}|${sort}`;
+  const isLoadMoreDisabled = loadingMore || loadMoreClickPending;
 
   useEffect(() => {
     let isMounted = true;
@@ -304,9 +305,9 @@ export function ProductsPage() {
               <div className="pagination-actions">
                 <button
                   className="secondary-button"
-                  disabled={loadMoreClickPending}
+                  disabled={isLoadMoreDisabled}
                   onClick={() => {
-                    if (loadMoreClickPendingRef.current) {
+                    if (isLoadMoreDisabled || loadMoreClickPendingRef.current) {
                       return;
                     }
 

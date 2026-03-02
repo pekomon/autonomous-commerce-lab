@@ -8,7 +8,14 @@ import {
 
 import type { StorefrontSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from './database.types';
-import { sortProducts, type ProductSortOption } from './storefrontHelpers';
+import {
+  buildProductResultsCacheKey,
+  DEFAULT_PRODUCTS_PAGE_SIZE,
+  paginateItems,
+  sortProducts,
+  type PaginationResult,
+  type ProductSortOption,
+} from './storefrontHelpers';
 
 const PRODUCT_IMAGES_BUCKET = 'product-images';
 
@@ -84,16 +91,30 @@ export interface FetchProductsParams {
   query: string;
   categoryId: string;
   sort: ProductSortOption;
+  page?: number;
+  pageSize?: number;
 }
 
+export type FetchProductsResult = PaginationResult<StorefrontProductCard>;
+
+// Simple in-memory caches for a single browser tab.
+// Limitations: no TTL/invalidation and data may become stale until page reload.
+let categoriesCache: Category[] | null = null;
+const productResultsCache = new Map<string, FetchProductsResult>();
+
 export async function fetchCategories(client: StorefrontSupabaseClient): Promise<Category[]> {
+  if (categoriesCache) {
+    return [...categoriesCache];
+  }
+
   const { data, error } = await client.from('categories').select(CATEGORY_SELECT).order('name');
 
   if (error) {
     throw error;
   }
 
-  return (data ?? []).map((row) => mapCategoryRowToCategory(row));
+  categoriesCache = (data ?? []).map((row) => mapCategoryRowToCategory(row));
+  return [...categoriesCache];
 }
 
 export async function fetchProductCategoryIds(
@@ -161,25 +182,43 @@ export async function fetchProductById(
 export async function fetchProducts(
   client: StorefrontSupabaseClient,
   params: FetchProductsParams,
-): Promise<StorefrontProductCard[]> {
-  const [{ data: productRows, error: productsError }, categories, productCategoryRows, imageRows] =
-    await Promise.all([
-      client.from('products').select(PRODUCT_SELECT),
-      client.from('categories').select(CATEGORY_SELECT),
-      client.from('product_categories').select(PRODUCT_CATEGORY_SELECT),
-      client
-        .from('product_images')
-        .select(PRODUCT_IMAGE_SELECT)
-        .order('product_id', { ascending: true })
-        .order('sort_order', { ascending: true }),
-    ]);
+): Promise<FetchProductsResult> {
+  const page = params.page ?? 1;
+  const pageSize = params.pageSize ?? DEFAULT_PRODUCTS_PAGE_SIZE;
+  const cacheKey = buildProductResultsCacheKey({
+    query: params.query,
+    categoryId: params.categoryId,
+    sort: params.sort,
+    page,
+    pageSize,
+  });
+
+  const cached = productResultsCache.get(cacheKey);
+  if (cached) {
+    return {
+      ...cached,
+      items: [...cached.items],
+    };
+  }
+
+  const [
+    categoryRows,
+    { data: productRows, error: productsError },
+    productCategoryRows,
+    imageRows,
+  ] = await Promise.all([
+    fetchCategories(client),
+    client.from('products').select(PRODUCT_SELECT),
+    client.from('product_categories').select(PRODUCT_CATEGORY_SELECT),
+    client
+      .from('product_images')
+      .select(PRODUCT_IMAGE_SELECT)
+      .order('product_id', { ascending: true })
+      .order('sort_order', { ascending: true }),
+  ]);
 
   if (productsError) {
     throw productsError;
-  }
-
-  if (categories.error) {
-    throw categories.error;
   }
 
   if (productCategoryRows.error) {
@@ -191,8 +230,7 @@ export async function fetchProducts(
   }
 
   const categoryById = new Map<string, Category>();
-  for (const row of categories.data ?? []) {
-    const category = mapCategoryRowToCategory(row);
+  for (const category of categoryRows) {
     categoryById.set(category.id, category);
   }
 
@@ -241,5 +279,11 @@ export async function fetchProducts(
     return true;
   });
 
-  return sortProducts(filtered, params.sort);
+  const paged = paginateItems(sortProducts(filtered, params.sort), page, pageSize);
+  productResultsCache.set(cacheKey, paged);
+
+  return {
+    ...paged,
+    items: [...paged.items],
+  };
 }

@@ -33,6 +33,7 @@ export function ProductsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [totalResults, setTotalResults] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreClickPending, setLoadMoreClickPending] = useState(false);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -41,6 +42,7 @@ export function ProductsPage() {
   const [categoryReloadKey, setCategoryReloadKey] = useState(0);
   const [productsReloadKey, setProductsReloadKey] = useState(0);
   const requestIdRef = useRef(0);
+  const loadMoreClickPendingRef = useRef(false);
   const previousFilterKeyRef = useRef('');
   const debouncedQuery = useDebouncedValue(queryInput, 300);
   const filterKey = `${debouncedQuery.trim().toLowerCase()}|${categoryId}|${sort}`;
@@ -96,6 +98,8 @@ export function ProductsPage() {
       setPage(1);
       setHasMore(false);
       setTotalResults(0);
+      setLoadMoreClickPending(false);
+      loadMoreClickPendingRef.current = false;
       setProductsError(null);
       return;
     }
@@ -110,6 +114,8 @@ export function ProductsPage() {
       if (!client) {
         setLoadingProducts(false);
         setLoadingMore(false);
+        setLoadMoreClickPending(false);
+        loadMoreClickPendingRef.current = false;
         return;
       }
 
@@ -117,6 +123,8 @@ export function ProductsPage() {
         setLoadingProducts(true);
       } else {
         setLoadingMore(true);
+        setLoadMoreClickPending(false);
+        loadMoreClickPendingRef.current = false;
       }
       setProductsError(null);
 
@@ -264,6 +272,8 @@ export function ProductsPage() {
             onRetry={() => {
               setProducts([]);
               setPage(1);
+              setLoadMoreClickPending(false);
+              loadMoreClickPendingRef.current = false;
               setProductsReloadKey((current) => current + 1);
             }}
             retryLabel="Retry products"
@@ -294,7 +304,16 @@ export function ProductsPage() {
               <div className="pagination-actions">
                 <button
                   className="secondary-button"
-                  onClick={() => setPage((current) => current + 1)}
+                  disabled={loadMoreClickPending}
+                  onClick={() => {
+                    if (loadMoreClickPendingRef.current) {
+                      return;
+                    }
+
+                    loadMoreClickPendingRef.current = true;
+                    setLoadMoreClickPending(true);
+                    setPage((current) => current + 1);
+                  }}
                   type="button"
                 >
                   Load more

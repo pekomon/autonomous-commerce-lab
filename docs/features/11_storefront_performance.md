@@ -15,6 +15,7 @@
 - `/products` starts from page 1 and requests additional pages only when the user clicks `Load more`.
 - Search query, category, and sort changes preserve filter state and reset results back to page 1.
 - The UI shows a terminal message when no more results are available.
+- The `Load more` action is temporarily disabled while a page request is pending to prevent skipped pages from rapid repeated clicks.
 
 ## Caching approach and limitations
 
@@ -31,6 +32,7 @@
 - Open `/products` and type quickly in the search input; confirm results update after a short delay and typing remains responsive.
 - Change category and sort filters; confirm page resets and results match active filters.
 - Click `Load more`; confirm new items append and existing items remain visible.
+- While loading the next page, confirm `Load more` cannot be triggered repeatedly.
 - Continue loading until the end; confirm end-of-results message is shown and `Load more` is hidden.
 - Refresh page and verify categories/products still load correctly when cache is cold.
 - Trigger a failed product request (for example via temporary API failure in test setup) and confirm retry still works.

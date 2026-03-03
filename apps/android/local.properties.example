@@ -1,0 +1,4 @@
+# Copy this file to local.properties and fill values for local development.
+# Never commit real credentials.
+SUPABASE_URL=
+SUPABASE_ANON_KEY=

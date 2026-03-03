@@ -15,4 +15,9 @@ dist
 # Supabase
 supabase/.temp
 
+# Android local secrets and build outputs
+apps/android/local.properties
+apps/android/.gradle
+apps/android/build
+apps/android/**/build
 

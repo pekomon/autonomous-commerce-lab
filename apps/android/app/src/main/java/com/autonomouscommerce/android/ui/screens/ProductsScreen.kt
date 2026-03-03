@@ -123,6 +123,12 @@ fun ProductsScreen(
                         Text("End of results")
                     }
                 }
+
+                if (!state.isLoading && errorMessage == null && state.products.isEmpty()) {
+                    item {
+                        Text("No products found. Try adjusting search, category, or sort.")
+                    }
+                }
             }
         }
     }

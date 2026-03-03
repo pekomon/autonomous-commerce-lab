@@ -42,6 +42,15 @@ Run the storefront web app:
 pnpm --filter @autonomous-commerce-lab/storefront-web dev
 ```
 
+Run the Android app:
+
+```bash
+cd apps/android
+cp local.properties.example local.properties
+# Fill SUPABASE_URL and SUPABASE_ANON_KEY in local.properties
+./gradlew :app:assembleDebug
+```
+
 Run tests:
 
 ```bash
@@ -81,6 +90,13 @@ Optional local-only key (never commit):
 
 ```bash
 # SUPABASE_SERVICE_ROLE_KEY=
+```
+
+Android uses local-only properties in `apps/android/local.properties`:
+
+```bash
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
 ```
 
 ## Storefront Runtime Config

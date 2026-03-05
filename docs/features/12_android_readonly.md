@@ -21,6 +21,7 @@
   - REST query builder
   - Cache key generation
   - Price formatting
+- Added Compose UI tests for products empty-state rendering.
 
 ## Local setup (secrets)
 

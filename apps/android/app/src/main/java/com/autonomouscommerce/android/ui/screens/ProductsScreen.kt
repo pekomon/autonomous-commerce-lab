@@ -43,6 +43,28 @@ fun ProductsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    ProductsScreenContent(
+        state = state,
+        onQueryInputChanged = viewModel::onQueryInputChanged,
+        onCategoryChanged = viewModel::onCategoryChanged,
+        onSortChanged = viewModel::onSortChanged,
+        onRetry = viewModel::onRetry,
+        onLoadMore = viewModel::onLoadMore,
+        onOpenProduct = onOpenProduct,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ProductsScreenContent(
+    state: ProductsUiState,
+    onQueryInputChanged: (String) -> Unit,
+    onCategoryChanged: (String) -> Unit,
+    onSortChanged: (SortOption) -> Unit,
+    onRetry: () -> Unit,
+    onLoadMore: () -> Unit,
+    onOpenProduct: (String) -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Storefront") })
@@ -57,7 +79,7 @@ fun ProductsScreen(
         ) {
             OutlinedTextField(
                 value = state.queryInput,
-                onValueChange = viewModel::onQueryInputChanged,
+                onValueChange = onQueryInputChanged,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Search products") },
                 leadingIcon = {
@@ -72,18 +94,18 @@ fun ProductsScreen(
             CategorySelector(
                 categories = state.categories,
                 selectedCategoryId = state.selectedCategoryId,
-                onSelected = viewModel::onCategoryChanged,
+                onSelected = onCategoryChanged,
             )
 
             SortSelector(
                 selectedSort = state.selectedSort,
-                onSelected = viewModel::onSortChanged,
+                onSelected = onSortChanged,
             )
 
             val errorMessage = state.errorMessage
             if (errorMessage != null) {
                 Text(text = errorMessage)
-                TextButton(onClick = viewModel::onRetry) {
+                TextButton(onClick = onRetry) {
                     Text("Retry")
                 }
             }
@@ -110,7 +132,7 @@ fun ProductsScreen(
                 if (!state.isLoading && !state.isLoadingMore && state.hasMore) {
                     item {
                         Button(
-                            onClick = viewModel::onLoadMore,
+                            onClick = onLoadMore,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Load more")

@@ -56,6 +56,13 @@ cd apps/android
 ./gradlew :app:assembleDebug
 ```
 
+- Follow-up CI adds an emulator-backed connected test lane:
+
+```bash
+cd apps/android
+./gradlew :app:connectedDebugAndroidTest
+```
+
 ## Known limitations
 
 - No auth, cart, or checkout in this feature.

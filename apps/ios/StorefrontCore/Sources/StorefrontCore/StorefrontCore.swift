@@ -1,9 +1,22 @@
 import Foundation
 
-public enum ProductSortOption: String {
+public enum ProductSortOption: String, CaseIterable, Identifiable {
     case newest
     case priceLowToHigh
     case priceHighToLow
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .newest:
+            return "Newest"
+        case .priceLowToHigh:
+            return "Price low -> high"
+        case .priceHighToLow:
+            return "Price high -> low"
+        }
+    }
 
     public var orderValue: String {
         switch self {
@@ -18,6 +31,16 @@ public enum ProductSortOption: String {
 }
 
 public enum PostgrestQueryBuilder {
+    public static func buildProductsCacheKey(
+        query: String,
+        categoryID: String,
+        sortOption: ProductSortOption,
+        page: Int,
+        pageSize: Int
+    ) -> String {
+        "\(query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())|\(categoryID)|\(sortOption.rawValue)|\(page)|\(pageSize)"
+    }
+
     public static func buildProductsQueryItems(
         query: String,
         sortOption: ProductSortOption,
@@ -39,8 +62,8 @@ public enum PostgrestQueryBuilder {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedQuery.isEmpty {
             let escaped = trimmedQuery
-                .replacingOccurrences(of: "%", with: "")
-                .replacingOccurrences(of: "_", with: "")
+                .replacingOccurrences(of: "%", with: "\\%")
+                .replacingOccurrences(of: "_", with: "\\_")
                 .replacingOccurrences(of: ",", with: "")
                 .replacingOccurrences(of: "(", with: "")
                 .replacingOccurrences(of: ")", with: "")

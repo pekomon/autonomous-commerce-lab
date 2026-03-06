@@ -5,7 +5,7 @@ import XCTest
 final class StorefrontCoreTests: XCTestCase {
     func testBuildProductsQueryItemsIncludesPaginationSortAndSearch() {
         let items = PostgrestQueryBuilder.buildProductsQueryItems(
-            query: "  camera  ",
+            query: "  camera_100%  ",
             sortOption: .priceLowToHigh,
             page: 2,
             pageSize: 20,
@@ -17,8 +17,20 @@ final class StorefrontCoreTests: XCTestCase {
         XCTAssertEqual(map["order"], "price_amount.asc")
         XCTAssertEqual(map["limit"], "21")
         XCTAssertEqual(map["offset"], "20")
-        XCTAssertEqual(map["or"], "(title.ilike.*camera*,description.ilike.*camera*)")
+        XCTAssertEqual(map["or"], "(title.ilike.*camera\\_100\\%*,description.ilike.*camera\\_100\\%*)")
         XCTAssertEqual(map["id"], "in.(prod-1,prod-2)")
+    }
+
+    func testBuildProductsCacheKeyNormalizesTrimAndCase() {
+        let key = PostgrestQueryBuilder.buildProductsCacheKey(
+            query: "  Camera  ",
+            categoryID: "cat-1",
+            sortOption: .newest,
+            page: 2,
+            pageSize: 20
+        )
+
+        XCTAssertEqual(key, "camera|cat-1|newest|2|20")
     }
 
     func testFormatPriceFallsBackToUsdForInvalidCurrency() {

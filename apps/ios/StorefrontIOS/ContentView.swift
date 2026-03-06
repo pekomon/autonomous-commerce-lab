@@ -4,36 +4,6 @@ import SwiftUI
 private let allCategoriesId = "all"
 private let productImagesBucket = "product-images"
 
-enum ProductSortOption: String, CaseIterable, Identifiable {
-    case newest
-    case priceLowToHigh
-    case priceHighToLow
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .newest:
-            return "Newest"
-        case .priceLowToHigh:
-            return "Price low -> high"
-        case .priceHighToLow:
-            return "Price high -> low"
-        }
-    }
-
-    var orderValue: String {
-        switch self {
-        case .newest:
-            return "created_at.desc"
-        case .priceLowToHigh:
-            return "price_amount.asc"
-        case .priceHighToLow:
-            return "price_amount.desc"
-        }
-    }
-}
-
 struct Category: Identifiable, Equatable {
     let id: String
     let name: String
@@ -120,86 +90,6 @@ protocol StorefrontRepository {
     ) async throws -> PagedProducts
 
     func fetchProductDetail(productID: String) async throws -> ProductDetail?
-}
-
-struct PostgrestQueryBuilder {
-    static func buildProductsCacheKey(
-        query: String,
-        categoryID: String,
-        sortOption: ProductSortOption,
-        page: Int,
-        pageSize: Int
-    ) -> String {
-        "\(query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())|\(categoryID)|\(sortOption.rawValue)|\(page)|\(pageSize)"
-    }
-
-    static func buildProductsQueryItems(
-        query: String,
-        sortOption: ProductSortOption,
-        page: Int,
-        pageSize: Int,
-        productIDsFilter: [String]?
-    ) -> [URLQueryItem] {
-        let safePage = max(1, page)
-        let offset = (safePage - 1) * pageSize
-
-        var items = [
-            URLQueryItem(name: "select", value: "id,title,description,price_amount,currency,tags,created_at,status"),
-            URLQueryItem(name: "status", value: "eq.active"),
-            URLQueryItem(name: "order", value: sortOption.orderValue),
-            URLQueryItem(name: "limit", value: String(pageSize + 1)),
-            URLQueryItem(name: "offset", value: String(offset)),
-        ]
-
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedQuery.isEmpty {
-            let escaped = sanitizeSearchQuery(trimmedQuery)
-            items.append(
-                URLQueryItem(
-                    name: "or",
-                    value: "(title.ilike.*\(escaped)*,description.ilike.*\(escaped)*)"
-                )
-            )
-        }
-
-        if let productIDsFilter {
-            if productIDsFilter.isEmpty {
-                items.append(URLQueryItem(name: "id", value: "in.()"))
-            } else {
-                items.append(URLQueryItem(name: "id", value: "in.(\(productIDsFilter.joined(separator: ",")))"))
-            }
-        }
-
-        return items
-    }
-
-    private static func sanitizeSearchQuery(_ query: String) -> String {
-        query
-            .replacingOccurrences(of: "%", with: "")
-            .replacingOccurrences(of: "_", with: "")
-            .replacingOccurrences(of: ",", with: "")
-            .replacingOccurrences(of: "(", with: "")
-            .replacingOccurrences(of: ")", with: "")
-    }
-}
-
-func formatPrice(amountInCents: Int, currencyCode: String) -> String {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .currency
-    formatter.locale = Locale(identifier: "en_US")
-
-    if let currency = CurrencyCode(rawValue: currencyCode) {
-        formatter.currencyCode = currency.rawValue
-    } else {
-        formatter.currencyCode = CurrencyCode.usd.rawValue
-    }
-
-    return formatter.string(from: NSNumber(value: Double(amountInCents) / 100.0)) ?? "-"
-}
-
-private enum CurrencyCode: String {
-    case usd = "USD"
-    case eur = "EUR"
 }
 
 func buildPublicImageURL(baseURL: String, path: String) -> URL? {
@@ -490,7 +380,8 @@ final class ProductsListViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isLoadingMore = false
     @Published var hasMore = false
-    @Published var errorMessage: String?
+    @Published var categoryErrorMessage: String?
+    @Published var productErrorMessage: String?
 
     private let repository: StorefrontRepository
     private var page = 1
@@ -502,7 +393,7 @@ final class ProductsListViewModel: ObservableObject {
     init(repository: StorefrontRepository) {
         self.repository = repository
         Task {
-            await loadInitialState()
+            await loadInitialState(forceCategoryReload: true)
         }
     }
 
@@ -555,18 +446,26 @@ final class ProductsListViewModel: ObservableObject {
 
     func retry() {
         Task {
+            await loadInitialState(forceCategoryReload: true)
+        }
+    }
+
+    func retryProducts() {
+        Task {
             await reloadProducts()
         }
     }
 
-    private func loadInitialState() async {
+    private func loadInitialState(forceCategoryReload: Bool) async {
         isLoading = true
-        errorMessage = nil
 
-        do {
-            categories = try await repository.fetchCategories()
-        } catch {
-            errorMessage = "Unable to load categories."
+        if forceCategoryReload || categories.isEmpty {
+            do {
+                categories = try await repository.fetchCategories()
+                categoryErrorMessage = nil
+            } catch {
+                categoryErrorMessage = "Unable to load categories. Retry to load filters."
+            }
         }
 
         await reloadProducts()
@@ -587,7 +486,7 @@ final class ProductsListViewModel: ObservableObject {
             isLoading = true
             products = []
         }
-        errorMessage = nil
+        productErrorMessage = nil
 
         do {
             let result = try await repository.fetchProducts(
@@ -617,7 +516,7 @@ final class ProductsListViewModel: ObservableObject {
                 return
             }
 
-            errorMessage = "Unable to load products. Check local iOS configuration and Supabase connectivity."
+            productErrorMessage = "Unable to load products. Check local iOS configuration and Supabase connectivity."
         }
 
         isLoading = false
@@ -678,18 +577,28 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
 
-                if let errorMessage = viewModel.errorMessage {
+                if let categoryErrorMessage = viewModel.categoryErrorMessage {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(errorMessage)
+                        Text(categoryErrorMessage)
                             .foregroundStyle(.red)
-                        Button("Retry") {
+                        Button("Retry categories") {
                             viewModel.retry()
                         }
                     }
                 }
 
+                if let productErrorMessage = viewModel.productErrorMessage {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(productErrorMessage)
+                            .foregroundStyle(.red)
+                        Button("Retry products") {
+                            viewModel.retryProducts()
+                        }
+                    }
+                }
+
                 if !viewModel.isLoading,
-                   viewModel.errorMessage == nil,
+                   viewModel.productErrorMessage == nil,
                    viewModel.products.isEmpty
                 {
                     Text("No products found. Try changing search, category, or sort.")

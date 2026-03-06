@@ -26,3 +26,4 @@ apps/ios/Config/Local.xcconfig
 apps/ios/**/*.xcworkspace/xcuserdata
 apps/ios/**/*.xcodeproj/xcuserdata
 apps/ios/**/DerivedData
+apps/ios/StorefrontCore/.build

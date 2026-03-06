@@ -92,3 +92,28 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: cd apps/android && ./gradlew :app:connectedDebugAndroidTest
+
+  ios-build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare local xcconfig
+        run: cp apps/ios/Config/Local.example.xcconfig apps/ios/Config/Local.xcconfig
+
+      - name: Build iOS app for simulator
+        run: |
+          xcodebuild \
+            -project apps/ios/StorefrontIOS.xcodeproj \
+            -scheme StorefrontIOS \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath /tmp/ios-derived \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Run iOS Swift tests
+        run: swift test --package-path apps/ios/StorefrontCore

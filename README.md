@@ -51,6 +51,22 @@ cp local.properties.example local.properties
 ./gradlew :app:assembleDebug
 ```
 
+Run the iOS app:
+
+```bash
+cd apps/ios
+cp Config/Local.example.xcconfig Config/Local.xcconfig
+# Fill SUPABASE_URL and SUPABASE_ANON_KEY in Local.xcconfig
+xcodebuild \
+  -project StorefrontIOS.xcodeproj \
+  -scheme StorefrontIOS \
+  -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath /tmp/ios-derived \
+  CODE_SIGNING_ALLOWED=NO \
+  CODE_SIGNING_REQUIRED=NO \
+  build
+```
+
 Run tests:
 
 ```bash
@@ -97,6 +113,13 @@ Android uses local-only properties in `apps/android/local.properties`:
 ```bash
 SUPABASE_URL=
 SUPABASE_ANON_KEY=
+```
+
+iOS uses local-only xcconfig in `apps/ios/Config/Local.xcconfig`:
+
+```xcconfig
+SUPABASE_URL =
+SUPABASE_ANON_KEY =
 ```
 
 ## Storefront Runtime Config

@@ -21,3 +21,8 @@ apps/android/.gradle
 apps/android/build
 apps/android/**/build
 
+# iOS local config and Xcode user data
+apps/ios/Config/Local.xcconfig
+apps/ios/**/*.xcworkspace/xcuserdata
+apps/ios/**/*.xcodeproj/xcuserdata
+apps/ios/**/DerivedData

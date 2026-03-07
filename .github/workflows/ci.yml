@@ -103,8 +103,7 @@ jobs:
             adb wait-for-device
             until adb shell getprop sys.boot_completed | tr -d '\r' | grep -q "1"; do sleep 2; done
             until adb shell cmd package list packages >/dev/null 2>&1; do sleep 2; done
-            cd apps/android
-            ./gradlew :app:connectedDebugAndroidTest
+            ./apps/android/gradlew -p apps/android :app:connectedDebugAndroidTest
 
   ios-build:
     runs-on: macos-latest

@@ -99,11 +99,15 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           emulator-boot-timeout: 900
-          script: |
-            adb wait-for-device
-            until adb shell getprop sys.boot_completed | tr -d '\r' | grep -q "1"; do sleep 2; done
-            until adb shell cmd package list packages >/dev/null 2>&1; do sleep 2; done
-            ./apps/android/gradlew -p apps/android :app:connectedDebugAndroidTest
+          script: ./scripts/android-connected-tests.sh
+
+      - name: Upload connected test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-connected-test-diagnostics
+          path: apps/android/build/ci-connected-tests
+          if-no-files-found: ignore
 
   ios-build:
     runs-on: macos-latest

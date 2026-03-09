@@ -37,6 +37,15 @@ final class StorefrontCoreTests: XCTestCase {
         XCTAssertEqual(formatPrice(amountInCents: 1234, currencyCode: "INVALID"), "$12.34")
     }
 
+    func testPendingSearchQueryStateCommitsLatestInputBeforeDebounceCompletes() {
+        var state = PendingSearchQueryState(activeQuery: "older query")
+
+        state.updateInput("  latest camera  ")
+
+        XCTAssertEqual(state.commitPendingInput(), "latest camera")
+        XCTAssertEqual(state.activeQuery, "latest camera")
+    }
+
     func testBuildPublicImageURLTrimsBaseURLAndEncodesPathSegments() {
         let url = buildPublicImageURL(
             baseURL: " https://example.supabase.co/ ",

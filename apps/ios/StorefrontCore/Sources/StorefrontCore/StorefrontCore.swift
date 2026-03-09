@@ -82,6 +82,26 @@ public enum PostgrestQueryBuilder {
     }
 }
 
+public struct PendingSearchQueryState: Equatable {
+    public private(set) var queryInput: String
+    public private(set) var activeQuery: String
+
+    public init(queryInput: String = "", activeQuery: String = "") {
+        self.queryInput = queryInput
+        self.activeQuery = activeQuery
+    }
+
+    public mutating func updateInput(_ value: String) {
+        queryInput = value
+    }
+
+    @discardableResult
+    public mutating func commitPendingInput() -> String {
+        activeQuery = queryInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        return activeQuery
+    }
+}
+
 public func formatPrice(amountInCents: Int, currencyCode: String) -> String {
     let formatter = NumberFormatter()
     formatter.numberStyle = .currency

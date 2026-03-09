@@ -95,3 +95,25 @@ public func formatPrice(amountInCents: Int, currencyCode: String) -> String {
 
     return formatter.string(from: NSNumber(value: Double(amountInCents) / 100.0)) ?? "-"
 }
+
+public func buildPublicImageURL(
+    baseURL: String,
+    path: String,
+    bucketName: String = "product-images"
+) -> URL? {
+    let trimmedBaseURL = baseURL
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    guard !trimmedBaseURL.isEmpty else {
+        return nil
+    }
+
+    let encodedPath = path
+        .split(separator: "/")
+        .map { part in
+            String(part).addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? String(part)
+        }
+        .joined(separator: "/")
+
+    return URL(string: "\(trimmedBaseURL)/storage/v1/object/public/\(bucketName)/\(encodedPath)")
+}

@@ -36,4 +36,16 @@ final class StorefrontCoreTests: XCTestCase {
     func testFormatPriceFallsBackToUsdForInvalidCurrency() {
         XCTAssertEqual(formatPrice(amountInCents: 1234, currencyCode: "INVALID"), "$12.34")
     }
+
+    func testBuildPublicImageURLTrimsBaseURLAndEncodesPathSegments() {
+        let url = buildPublicImageURL(
+            baseURL: " https://example.supabase.co/ ",
+            path: "catalog folder/hero image.png"
+        )
+
+        XCTAssertEqual(
+            url?.absoluteString,
+            "https://example.supabase.co/storage/v1/object/public/product-images/catalog%20folder/hero%20image.png"
+        )
+    }
 }

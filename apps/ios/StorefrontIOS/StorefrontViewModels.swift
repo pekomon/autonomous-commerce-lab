@@ -49,6 +49,7 @@ final class ProductsListViewModel: ObservableObject {
         }
 
         selectedCategoryID = categoryID
+        commitPendingSearch()
         Task {
             await reloadProducts()
         }
@@ -60,6 +61,7 @@ final class ProductsListViewModel: ObservableObject {
         }
 
         selectedSort = sortOption
+        commitPendingSearch()
         Task {
             await reloadProducts()
         }
@@ -76,15 +78,22 @@ final class ProductsListViewModel: ObservableObject {
     }
 
     func retry() {
+        commitPendingSearch()
         Task {
             await loadInitialState(forceCategoryReload: true)
         }
     }
 
     func retryProducts() {
+        commitPendingSearch()
         Task {
             await reloadProducts()
         }
+    }
+
+    private func commitPendingSearch() {
+        debounceTask?.cancel()
+        activeQuery = queryInput.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func loadInitialState(forceCategoryReload: Bool) async {

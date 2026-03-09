@@ -18,3 +18,8 @@
 - Keep architecture decisions in `docs/decisions.md`.
 - Mobile progression: start with read-only Android catalog browsing, then add auth/cart/checkout in follow-up features.
 - Mobile progression now includes iOS read-only storefront parity before auth/cart/checkout expansion.
+
+## Current Progress
+
+- Feature 12 completed: Android read-only storefront is documented in `docs/features/12_android_readonly.md`.
+- Feature 13 completed: iOS read-only storefront is documented in `docs/features/13_ios_readonly.md`.

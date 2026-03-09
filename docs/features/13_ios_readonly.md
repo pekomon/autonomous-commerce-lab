@@ -61,7 +61,7 @@ xcodebuild \
 
 ## Tests
 
-Added pure Swift unit tests for query building and price formatting in a lightweight Swift package:
+Added pure Swift unit tests for query building, public image URL composition, and price formatting in a lightweight Swift package:
 
 ```bash
 swift test --package-path apps/ios/StorefrontCore

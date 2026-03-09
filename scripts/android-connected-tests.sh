@@ -61,8 +61,11 @@ should_retry_for_transient_dependency_failure() {
   local log_file="$1"
 
   grep -Eq \
-    "Received status code 50[234] from server|Bad Gateway|Gateway Timeout|Connection reset|Read timed out|Remote host terminated the handshake|Temporary failure in name resolution" \
-    "$log_file"
+    "Could not resolve all files for configuration|Could not resolve [^[:space:]]+|Could not get resource 'https://|Could not (GET|HEAD) 'https://" \
+    "$log_file" &&
+    grep -Eq \
+      "Received status code 50[234] from server|Bad Gateway|Gateway Timeout|Connection reset|Read timed out|Remote host terminated the handshake|Temporary failure in name resolution" \
+      "$log_file"
 }
 
 print_retry_reason() {

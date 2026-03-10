@@ -27,3 +27,9 @@ apps/ios/**/*.xcworkspace/xcuserdata
 apps/ios/**/*.xcodeproj/xcuserdata
 apps/ios/**/DerivedData
 apps/ios/StorefrontCore/.build
+
+# macOS local config and Xcode user data
+apps/macos/Config/Local.xcconfig
+apps/macos/**/*.xcworkspace/xcuserdata
+apps/macos/**/*.xcodeproj/xcuserdata
+apps/macos/**/DerivedData

@@ -133,3 +133,24 @@ jobs:
 
       - name: Run iOS Swift tests
         run: swift test --package-path apps/ios/StorefrontCore
+
+  macos-build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare local xcconfig
+        run: cp apps/macos/Config/Local.example.xcconfig apps/macos/Config/Local.xcconfig
+
+      - name: Build macOS app
+        run: |
+          xcodebuild \
+            -project apps/macos/StorefrontMacOS.xcodeproj \
+            -scheme StorefrontMacOS \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build

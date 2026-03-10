@@ -18,6 +18,7 @@ final class ProductsListViewModel: ObservableObject {
     private var page = 1
     private let pageSize = 20
     private var activeQuery = ""
+    private var pendingSearchState = PendingSearchQueryState()
     private var debounceTask: Task<Void, Never>?
     private var requestID = 0
 
@@ -30,6 +31,7 @@ final class ProductsListViewModel: ObservableObject {
 
     func onSearchInputChanged(_ value: String) {
         queryInput = value
+        pendingSearchState.updateInput(value)
         debounceTask?.cancel()
 
         debounceTask = Task {
@@ -38,7 +40,7 @@ final class ProductsListViewModel: ObservableObject {
                 return
             }
 
-            activeQuery = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            activeQuery = pendingSearchState.commitPendingInput()
             await reloadProducts()
         }
     }
@@ -49,6 +51,7 @@ final class ProductsListViewModel: ObservableObject {
         }
 
         selectedCategoryID = categoryID
+        commitPendingSearch()
         Task {
             await reloadProducts()
         }
@@ -60,6 +63,7 @@ final class ProductsListViewModel: ObservableObject {
         }
 
         selectedSort = sortOption
+        commitPendingSearch()
         Task {
             await reloadProducts()
         }
@@ -76,15 +80,23 @@ final class ProductsListViewModel: ObservableObject {
     }
 
     func retry() {
+        commitPendingSearch()
         Task {
             await loadInitialState(forceCategoryReload: true)
         }
     }
 
     func retryProducts() {
+        commitPendingSearch()
         Task {
             await reloadProducts()
         }
+    }
+
+    private func commitPendingSearch() {
+        debounceTask?.cancel()
+        pendingSearchState.updateInput(queryInput)
+        activeQuery = pendingSearchState.commitPendingInput()
     }
 
     private func loadInitialState(forceCategoryReload: Bool) async {

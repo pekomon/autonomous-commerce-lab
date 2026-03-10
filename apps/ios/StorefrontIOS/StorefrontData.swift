@@ -1,7 +1,6 @@
 import Foundation
 
 let allCategoriesId = "all"
-private let productImagesBucket = "product-images"
 
 struct Category: Identifiable, Equatable {
     let id: String
@@ -89,22 +88,6 @@ protocol StorefrontRepository {
     ) async throws -> PagedProducts
 
     func fetchProductDetail(productID: String) async throws -> ProductDetail?
-}
-
-func buildPublicImageURL(baseURL: String, path: String) -> URL? {
-    let trimmed = baseURL.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-    guard !trimmed.isEmpty else {
-        return nil
-    }
-
-    let encodedPath = path
-        .split(separator: "/")
-        .map { part in
-            String(part).addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? String(part)
-        }
-        .joined(separator: "/")
-
-    return URL(string: "\(trimmed)/storage/v1/object/public/\(productImagesBucket)/\(encodedPath)")
 }
 
 final class SupabaseAPIClient {

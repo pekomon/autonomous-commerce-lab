@@ -57,13 +57,25 @@ should_retry_for_bootstrap_failure() {
     "$log_file"
 }
 
-print_retry_reason() {
+should_retry_for_transient_dependency_failure() {
   local log_file="$1"
 
-  echo "Connected tests failed due to emulator/bootstrap instability. Retrying once."
+  grep -Eq \
+    "Could not resolve all files for configuration|Could not resolve [^[:space:]]+|Could not get resource 'https://|Could not (GET|HEAD) 'https://" \
+    "$log_file" &&
+    grep -Eq \
+      "Received status code 50[234] from server|Bad Gateway|Gateway Timeout|Connection reset|Read timed out|Remote host terminated the handshake|Temporary failure in name resolution" \
+      "$log_file"
+}
+
+print_retry_reason() {
+  local log_file="$1"
+  local reason="$2"
+
+  echo "Connected tests failed due to ${reason}. Retrying once."
   echo "Matched failure lines:"
   grep -E \
-    "adb protocol fault|Unable to connect to adb daemon|device offline|device 'emulator-[0-9]+' not found|Can't find service: (package|activity)|Failed to install split APK|Failed to start Emulator console|Broken pipe \(32\)" \
+    "adb protocol fault|Unable to connect to adb daemon|device offline|device 'emulator-[0-9]+' not found|Can't find service: (package|activity)|Failed to install split APK|Failed to start Emulator console|Broken pipe \(32\)|Received status code 50[234] from server|Bad Gateway|Gateway Timeout|Connection reset|Read timed out|Remote host terminated the handshake|Temporary failure in name resolution" \
     "$log_file" || true
 }
 
@@ -76,17 +88,20 @@ main() {
 
   copy_attempt_artifacts "attempt-1"
 
-  if ! should_retry_for_bootstrap_failure "$LOG_DIR/attempt-1.log"; then
-    echo "Connected tests failed without a retryable emulator/bootstrap signature."
+  if should_retry_for_bootstrap_failure "$LOG_DIR/attempt-1.log"; then
+    print_retry_reason "$LOG_DIR/attempt-1.log" "emulator/bootstrap instability"
+
+    adb kill-server || true
+    adb start-server || true
+
+    wait_for_emulator_services
+  elif should_retry_for_transient_dependency_failure "$LOG_DIR/attempt-1.log"; then
+    print_retry_reason "$LOG_DIR/attempt-1.log" "transient dependency download failures"
+    sleep 10
+  else
+    echo "Connected tests failed without a retryable emulator/bootstrap or dependency-download signature."
     exit 1
   fi
-
-  print_retry_reason "$LOG_DIR/attempt-1.log"
-
-  adb kill-server || true
-  adb start-server || true
-
-  wait_for_emulator_services
 
   if run_connected_tests "attempt-2"; then
     exit 0

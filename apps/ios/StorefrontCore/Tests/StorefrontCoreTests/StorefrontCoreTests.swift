@@ -33,6 +33,21 @@ final class StorefrontCoreTests: XCTestCase {
         XCTAssertEqual(key, "camera|cat-1|newest|2|20")
     }
 
+    func testBuildProductsQueryItemsKeepsEmptyCategoryFilterExplicit() {
+        let items = PostgrestQueryBuilder.buildProductsQueryItems(
+            query: "",
+            sortOption: .newest,
+            page: 1,
+            pageSize: 20,
+            productIDsFilter: []
+        )
+
+        let map = Dictionary(uniqueKeysWithValues: items.map { ($0.name, $0.value ?? "") })
+
+        XCTAssertEqual(map["id"], "in.()")
+        XCTAssertNil(map["or"])
+    }
+
     func testFormatPriceFallsBackToUsdForInvalidCurrency() {
         XCTAssertEqual(formatPrice(amountInCents: 1234, currencyCode: "INVALID"), "$12.34")
     }

@@ -1,0 +1,7 @@
+TEAM_ID=
+BUNDLE_ID=lab.autonomouscommerce.macos
+APP_NAME=StorefrontMacOS
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+
+#include? "Local.xcconfig"

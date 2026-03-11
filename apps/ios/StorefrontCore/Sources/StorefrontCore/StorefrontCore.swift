@@ -102,6 +102,17 @@ public struct PendingSearchQueryState: Equatable {
     }
 }
 
+public func resolveSelectedProductID(
+    currentSelection: String?,
+    availableProductIDs: [String]
+) -> String? {
+    if let currentSelection, availableProductIDs.contains(currentSelection) {
+        return currentSelection
+    }
+
+    return availableProductIDs.first
+}
+
 public func formatPrice(amountInCents: Int, currencyCode: String) -> String {
     let formatter = NumberFormatter()
     formatter.numberStyle = .currency

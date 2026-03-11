@@ -48,6 +48,15 @@ final class StorefrontCoreTests: XCTestCase {
         XCTAssertNil(map["or"])
     }
 
+    func testResolveSelectedProductIDFallsBackWhenCurrentSelectionDisappears() {
+        let resolved = resolveSelectedProductID(
+            currentSelection: "prod-2",
+            availableProductIDs: ["prod-4", "prod-5"]
+        )
+
+        XCTAssertEqual(resolved, "prod-4")
+    }
+
     func testFormatPriceFallsBackToUsdForInvalidCurrency() {
         XCTAssertEqual(formatPrice(amountInCents: 1234, currencyCode: "INVALID"), "$12.34")
     }

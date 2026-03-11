@@ -25,8 +25,3 @@
 - Feature 12 completed: Android read-only storefront is documented in `docs/features/12_android_readonly.md`.
 - Feature 13 completed: iOS read-only storefront is documented in `docs/features/13_ios_readonly.md`.
 - Feature 14 completed: macOS read-only storefront is documented in `docs/features/14_macos_readonly.md`.
-
-## Current Progress
-
-- Feature 12 completed: Android read-only storefront is documented in `docs/features/12_android_readonly.md`.
-- Feature 13 completed: iOS read-only storefront is documented in `docs/features/13_ios_readonly.md`.

@@ -21,7 +21,7 @@ struct ContentView: View {
         .onAppear {
             syncSelection(with: viewModel.products.map(\.id))
         }
-        .onChange(of: viewModel.products.map(\.id)) { productIDs in
+        .onChange(of: viewModel.products.map(\.id)) { _, productIDs in
             syncSelection(with: productIDs)
         }
     }
@@ -170,17 +170,17 @@ struct ContentView: View {
     private var detailPane: some View {
         if let selectedProductID {
             ProductDetailView(productID: selectedProductID, repository: repository)
+                .id(selectedProductID)
         } else {
             EmptySelectionView()
         }
     }
 
     private func syncSelection(with productIDs: [String]) {
-        if let selectedProductID, productIDs.contains(selectedProductID) {
-            return
-        }
-
-        selectedProductID = productIDs.first
+        selectedProductID = resolveSelectedProductID(
+            currentSelection: selectedProductID,
+            availableProductIDs: productIDs
+        )
     }
 }
 

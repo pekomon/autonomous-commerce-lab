@@ -1,6 +1,7 @@
 TEAM_ID=
 BUNDLE_ID=lab.autonomouscommerce.ios
 APP_NAME=StorefrontIOS
+SLASH=/
 SUPABASE_URL=
 SUPABASE_ANON_KEY=
 

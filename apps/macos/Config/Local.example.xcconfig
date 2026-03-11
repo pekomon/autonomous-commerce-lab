@@ -1,4 +1,4 @@
 // Copy to Local.xcconfig and set local-only values.
 // Never commit real credentials.
-SUPABASE_URL =
+SUPABASE_URL = https:$(SLASH)$(SLASH)your-project-ref.supabase.co
 SUPABASE_ANON_KEY =

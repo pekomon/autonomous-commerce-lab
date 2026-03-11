@@ -13,11 +13,12 @@ cp Config/Local.example.xcconfig Config/Local.xcconfig
 2. Set local-only values in `Config/Local.xcconfig`:
 
 ```xcconfig
-SUPABASE_URL =
+SUPABASE_URL = https:$(SLASH)$(SLASH)your-project-ref.supabase.co
 SUPABASE_ANON_KEY =
 ```
 
 Do not commit real credentials.
+Note: in `.xcconfig` files, a raw `https://...` value is parsed incorrectly because `//` starts a comment. Use `https:$(SLASH)$(SLASH)...`.
 
 ## Build in Xcode
 

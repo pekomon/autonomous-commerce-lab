@@ -31,11 +31,12 @@ cp apps/macos/Config/Local.example.xcconfig apps/macos/Config/Local.xcconfig
 2. Set values in `Local.xcconfig`:
 
 ```xcconfig
-SUPABASE_URL =
+SUPABASE_URL = https:$(SLASH)$(SLASH)your-project-ref.supabase.co
 SUPABASE_ANON_KEY =
 ```
 
 Runtime config is read from `Info.plist` values backed by xcconfig build settings.
+Use `https:$(SLASH)$(SLASH)...` in `.xcconfig`; a raw `https://...` URL is truncated by xcconfig comment parsing.
 
 ## How to run
 

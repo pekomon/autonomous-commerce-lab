@@ -107,7 +107,10 @@ final class ProductsListViewModel: ObservableObject {
                 categories = try await repository.fetchCategories()
                 categoryErrorMessage = nil
             } catch {
-                categoryErrorMessage = "Unable to load categories. Retry to load filters."
+                categoryErrorMessage = storefrontLoadErrorMessage(
+                    prefix: "Unable to load categories.",
+                    error: error
+                )
             }
         }
 
@@ -159,7 +162,10 @@ final class ProductsListViewModel: ObservableObject {
                 return
             }
 
-            productErrorMessage = "Unable to load products. Check local iOS configuration and Supabase connectivity."
+            productErrorMessage = storefrontLoadErrorMessage(
+                prefix: "Unable to load products.",
+                error: error
+            )
         }
 
         isLoading = false
@@ -194,7 +200,10 @@ final class ProductDetailViewModel: ObservableObject {
                 errorMessage = "Product not found."
             }
         } catch {
-            errorMessage = "Unable to load product details."
+            errorMessage = storefrontLoadErrorMessage(
+                prefix: "Unable to load product details.",
+                error: error
+            )
         }
 
         loading = false

@@ -113,6 +113,45 @@ public func resolveSelectedProductID(
     return availableProductIDs.first
 }
 
+public enum SupabaseConfigValidator {
+    public static func validate(url: String, anonKey: String) -> String? {
+        let normalizedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        if normalizedURL.isEmpty {
+            return "SUPABASE_URL is missing."
+        }
+
+        if looksUnresolved(normalizedURL) {
+            return "SUPABASE_URL is unresolved. Check Local.xcconfig."
+        }
+
+        guard let components = URLComponents(string: normalizedURL),
+              let scheme = components.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              let host = components.host,
+              !host.isEmpty
+        else {
+            return "SUPABASE_URL must be a valid http or https URL."
+        }
+
+        let normalizedAnonKey = anonKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if normalizedAnonKey.isEmpty {
+            return "SUPABASE_ANON_KEY is missing."
+        }
+
+        if looksUnresolved(normalizedAnonKey) {
+            return "SUPABASE_ANON_KEY is unresolved. Check Local.xcconfig."
+        }
+
+        return nil
+    }
+
+    private static func looksUnresolved(_ value: String) -> Bool {
+        value == "..." ||
+            (value.contains("$(") && value.contains(")")) ||
+            (value.hasPrefix("<") && value.hasSuffix(">"))
+    }
+}
+
 public func formatPrice(amountInCents: Int, currencyCode: String) -> String {
     let formatter = NumberFormatter()
     formatter.numberStyle = .currency

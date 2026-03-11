@@ -38,15 +38,7 @@ struct SupabaseRuntimeConfig {
     let anonKey: String
 
     var validationError: String? {
-        if url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "SUPABASE_URL is missing."
-        }
-
-        if anonKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "SUPABASE_ANON_KEY is missing."
-        }
-
-        return nil
+        SupabaseConfigValidator.validate(url: url, anonKey: anonKey)
     }
 
     static func fromBundle(bundle: Bundle = .main) -> SupabaseRuntimeConfig {
@@ -54,6 +46,15 @@ struct SupabaseRuntimeConfig {
         let anonKey = bundle.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String ?? ""
         return SupabaseRuntimeConfig(url: url, anonKey: anonKey)
     }
+}
+
+func storefrontLoadErrorMessage(prefix: String, error: Error) -> String {
+    let detail = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+    if detail.isEmpty {
+        return prefix
+    }
+
+    return "\(prefix) \(detail)"
 }
 
 enum APIError: LocalizedError {

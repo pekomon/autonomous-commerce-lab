@@ -57,6 +57,24 @@ final class StorefrontCoreTests: XCTestCase {
         XCTAssertEqual(resolved, "prod-4")
     }
 
+    func testSupabaseConfigValidatorRejectsUnresolvedBuildSettingPlaceholder() {
+        let error = SupabaseConfigValidator.validate(
+            url: "$(SUPABASE_URL)",
+            anonKey: "anon-key"
+        )
+
+        XCTAssertEqual(error, "SUPABASE_URL is unresolved. Check Local.xcconfig.")
+    }
+
+    func testSupabaseConfigValidatorAcceptsValidSupabaseConfig() {
+        let error = SupabaseConfigValidator.validate(
+            url: "https://example.supabase.co",
+            anonKey: "anon-key"
+        )
+
+        XCTAssertNil(error)
+    }
+
     func testFormatPriceFallsBackToUsdForInvalidCurrency() {
         XCTAssertEqual(formatPrice(amountInCents: 1234, currencyCode: "INVALID"), "$12.34")
     }

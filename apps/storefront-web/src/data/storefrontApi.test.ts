@@ -11,7 +11,7 @@ interface QueryState {
 }
 
 type QueryResult = {
-  data: any;
+  data: unknown;
   error: unknown;
 };
 

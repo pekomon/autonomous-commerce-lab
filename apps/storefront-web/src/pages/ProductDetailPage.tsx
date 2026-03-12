@@ -69,11 +69,7 @@ export function ProductDetailPage() {
         }
 
         const [imageRows, categoryIds, allCategories] = await Promise.all([
-          loadOptionalProductMetadata(
-            fetchProductImages(client, productId),
-            [],
-            'product images',
-          ),
+          loadOptionalProductMetadata(fetchProductImages(client, productId), [], 'product images'),
           loadOptionalProductMetadata(
             fetchProductCategoryIds(client, productId),
             [],

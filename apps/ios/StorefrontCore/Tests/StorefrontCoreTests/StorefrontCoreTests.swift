@@ -33,6 +33,48 @@ final class StorefrontCoreTests: XCTestCase {
         XCTAssertEqual(key, "camera|cat-1|newest|2|20")
     }
 
+    func testBuildProductsQueryItemsKeepsEmptyCategoryFilterExplicit() {
+        let items = PostgrestQueryBuilder.buildProductsQueryItems(
+            query: "",
+            sortOption: .newest,
+            page: 1,
+            pageSize: 20,
+            productIDsFilter: []
+        )
+
+        let map = Dictionary(uniqueKeysWithValues: items.map { ($0.name, $0.value ?? "") })
+
+        XCTAssertEqual(map["id"], "in.()")
+        XCTAssertNil(map["or"])
+    }
+
+    func testResolveSelectedProductIDFallsBackWhenCurrentSelectionDisappears() {
+        let resolved = resolveSelectedProductID(
+            currentSelection: "prod-2",
+            availableProductIDs: ["prod-4", "prod-5"]
+        )
+
+        XCTAssertEqual(resolved, "prod-4")
+    }
+
+    func testSupabaseConfigValidatorRejectsUnresolvedBuildSettingPlaceholder() {
+        let error = SupabaseConfigValidator.validate(
+            url: "$(SUPABASE_URL)",
+            anonKey: "anon-key"
+        )
+
+        XCTAssertEqual(error, "SUPABASE_URL is unresolved. Check Local.xcconfig.")
+    }
+
+    func testSupabaseConfigValidatorAcceptsValidSupabaseConfig() {
+        let error = SupabaseConfigValidator.validate(
+            url: "https://example.supabase.co",
+            anonKey: "anon-key"
+        )
+
+        XCTAssertNil(error)
+    }
+
     func testFormatPriceFallsBackToUsdForInvalidCurrency() {
         XCTAssertEqual(formatPrice(amountInCents: 1234, currencyCode: "INVALID"), "$12.34")
     }

@@ -1,10 +1,10 @@
-# iOS App
+# macOS App
 
-Native read-only storefront app built with Swift and SwiftUI.
+Native read-only storefront app built with Swift and SwiftUI for macOS.
 
 ## Local configuration
 
-1. Copy local config template:
+1. Copy the local config template:
 
 ```bash
 cp Config/Local.example.xcconfig Config/Local.xcconfig
@@ -22,25 +22,27 @@ Note: in `.xcconfig` files, a raw `https://...` value is parsed incorrectly beca
 
 ## Build in Xcode
 
-1. Open `StorefrontIOS.xcodeproj`.
-2. Select the `StorefrontIOS` scheme.
-3. Build and run on an iOS simulator.
+1. Open `StorefrontMacOS.xcodeproj`.
+2. Select the `StorefrontMacOS` scheme.
+3. Build and run on macOS.
 
 ## Build from CLI
 
 ```bash
 xcodebuild \
-  -project StorefrontIOS.xcodeproj \
-  -scheme StorefrontIOS \
-  -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath /tmp/ios-derived \
+  -project StorefrontMacOS.xcodeproj \
+  -scheme StorefrontMacOS \
+  -configuration Debug \
+  -destination 'platform=macOS' \
   CODE_SIGNING_ALLOWED=NO \
   CODE_SIGNING_REQUIRED=NO \
   build
 ```
 
-## Swift tests
+## Shared Swift tests
+
+The shared pure Swift storefront helpers are tested here:
 
 ```bash
-swift test --package-path StorefrontCore
+swift test --package-path ../ios/StorefrontCore
 ```

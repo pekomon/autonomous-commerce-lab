@@ -196,6 +196,37 @@ describe('storefront page states', () => {
     expect(storefrontApiMocks.fetchProductById).not.toHaveBeenCalled();
   });
 
+  it('ProductDetailPage still shows the product when optional metadata requests fail', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    supabaseState.client = {};
+    supabaseState.configError = null;
+
+    storefrontApiMocks.fetchProductById.mockResolvedValue({
+      createdAt: '2026-02-15T10:00:00.000Z',
+      currency: 'EUR',
+      description: 'A resilient product',
+      id: 'prod-1',
+      price: 10,
+      status: 'active',
+      tags: [],
+      title: 'Alpha',
+    });
+    storefrontApiMocks.fetchProductImages.mockRejectedValueOnce(new Error('image load failed'));
+    storefrontApiMocks.fetchProductCategoryIds.mockRejectedValueOnce(
+      new Error('product category load failed'),
+    );
+    storefrontApiMocks.fetchCategories.mockRejectedValueOnce(new Error('category load failed'));
+
+    renderProductDetailPage();
+
+    expect(await screen.findByText('Alpha')).toBeTruthy();
+    expect(screen.getByText('No image available')).toBeTruthy();
+    expect(screen.queryByText('Unable to load product details. Please try again.')).toBeNull();
+
+    warnSpy.mockRestore();
+  });
+
   it('ProductsPage debounces search and sends only the latest query', async () => {
     supabaseState.client = {};
     supabaseState.configError = null;

@@ -16,6 +16,17 @@ import {
 } from '../data/storefrontApi';
 import { useSupabase } from '../lib/SupabaseContext';
 
+function loadOptionalProductMetadata<T>(
+  promise: Promise<T>,
+  fallbackValue: T,
+  resource: string,
+): Promise<T> {
+  return promise.catch((error: unknown) => {
+    console.warn(`[storefront] Continuing without ${resource}.`, error);
+    return fallbackValue;
+  });
+}
+
 export function ProductDetailPage() {
   const { id } = useParams();
   const { client, configError } = useSupabase();
@@ -43,11 +54,32 @@ export function ProductDetailPage() {
       setError(null);
 
       try {
-        const [productRow, imageRows, categoryIds, allCategories] = await Promise.all([
-          fetchProductById(client, productId),
-          fetchProductImages(client, productId),
-          fetchProductCategoryIds(client, productId),
-          fetchCategories(client),
+        const productRow = await fetchProductById(client, productId);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (!productRow) {
+          setProduct(null);
+          setImages([]);
+          setCategories([]);
+          setActiveImageIndex(0);
+          return;
+        }
+
+        const [imageRows, categoryIds, allCategories] = await Promise.all([
+          loadOptionalProductMetadata(
+            fetchProductImages(client, productId),
+            [],
+            'product images',
+          ),
+          loadOptionalProductMetadata(
+            fetchProductCategoryIds(client, productId),
+            [],
+            'product-category mappings',
+          ),
+          loadOptionalProductMetadata(fetchCategories(client), [], 'category metadata'),
         ]);
 
         if (!isMounted) {

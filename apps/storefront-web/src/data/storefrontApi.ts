@@ -31,6 +31,11 @@ type CategoryRow = Database['public']['Tables']['categories']['Row'];
 const VALID_CURRENCIES: CurrencyCode[] = ['USD', 'EUR'];
 const VALID_STATUSES: ProductStatus[] = ['active', 'draft', 'archived'];
 
+interface OptionalRowsResult<Row> {
+  data: Row[];
+  failed: boolean;
+}
+
 function coerceCurrency(value: string): CurrencyCode {
   if (VALID_CURRENCIES.includes(value as CurrencyCode)) {
     return value as CurrencyCode;
@@ -71,6 +76,60 @@ function mapCategoryRowToCategory(row: CategoryRow): Category {
 
 function toPublicImageUrl(client: StorefrontSupabaseClient, path: string): string {
   return client.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+function logOptionalStorefrontDataError(resource: string, error: unknown) {
+  console.warn(`[storefront] Continuing without ${resource}.`, error);
+}
+
+async function fetchOptionalRows<Row>(
+  query: PromiseLike<{ data: Row[] | null; error: unknown }>,
+  resource: string,
+): Promise<OptionalRowsResult<Row>> {
+  const { data, error } = await query;
+
+  if (error) {
+    logOptionalStorefrontDataError(resource, error);
+
+    return {
+      data: [],
+      failed: true,
+    };
+  }
+
+  return {
+    data: data ?? [],
+    failed: false,
+  };
+}
+
+async function fetchOptionalCategories(
+  client: StorefrontSupabaseClient,
+): Promise<{ categories: Category[]; failed: boolean }> {
+  if (categoriesCache) {
+    return {
+      categories: [...categoriesCache],
+      failed: false,
+    };
+  }
+
+  const { data, error } = await client.from('categories').select(CATEGORY_SELECT).order('name');
+
+  if (error) {
+    logOptionalStorefrontDataError('category metadata', error);
+
+    return {
+      categories: [],
+      failed: true,
+    };
+  }
+
+  categoriesCache = (data ?? []).map((row) => mapCategoryRowToCategory(row));
+
+  return {
+    categories: [...categoriesCache],
+    failed: false,
+  };
 }
 
 export interface StorefrontProductCard extends Product {
@@ -202,32 +261,37 @@ export async function fetchProducts(
   }
 
   const [
-    categoryRows,
+    { categories: categoryRows, failed: categoriesFailed },
     { data: productRows, error: productsError },
     productCategoryRows,
     imageRows,
   ] = await Promise.all([
-    fetchCategories(client),
+    fetchOptionalCategories(client),
     client.from('products').select(PRODUCT_SELECT),
-    client.from('product_categories').select(PRODUCT_CATEGORY_SELECT),
-    client
-      .from('product_images')
-      .select(PRODUCT_IMAGE_SELECT)
-      .order('product_id', { ascending: true })
-      .order('sort_order', { ascending: true }),
+    fetchOptionalRows(
+      client.from('product_categories').select(PRODUCT_CATEGORY_SELECT),
+      'product-category metadata',
+    ),
+    fetchOptionalRows(
+      client
+        .from('product_images')
+        .select(PRODUCT_IMAGE_SELECT)
+        .order('product_id', { ascending: true })
+        .order('sort_order', { ascending: true }),
+      'product image metadata',
+    ),
   ]);
 
   if (productsError) {
     throw productsError;
   }
 
-  if (productCategoryRows.error) {
-    throw productCategoryRows.error;
+  if (params.categoryId !== 'all' && productCategoryRows.failed) {
+    throw new Error('Unable to load category mappings for filtered products.');
   }
 
-  if (imageRows.error) {
-    throw imageRows.error;
-  }
+  const hasOptionalMetadataFailure =
+    categoriesFailed || productCategoryRows.failed || imageRows.failed;
 
   const categoryById = new Map<string, Category>();
   for (const category of categoryRows) {
@@ -235,14 +299,14 @@ export async function fetchProducts(
   }
 
   const productCategoryIds = new Map<string, string[]>();
-  for (const row of productCategoryRows.data ?? []) {
+  for (const row of productCategoryRows.data) {
     const current = productCategoryIds.get(row.product_id) ?? [];
     current.push(row.category_id);
     productCategoryIds.set(row.product_id, current);
   }
 
   const firstImagePathByProductId = new Map<string, string>();
-  for (const row of imageRows.data ?? []) {
+  for (const row of imageRows.data) {
     if (!firstImagePathByProductId.has(row.product_id)) {
       firstImagePathByProductId.set(row.product_id, row.path);
     }
@@ -280,7 +344,9 @@ export async function fetchProducts(
   });
 
   const paged = paginateItems(sortProducts(filtered, params.sort), page, pageSize);
-  productResultsCache.set(cacheKey, paged);
+  if (!hasOptionalMetadataFailure) {
+    productResultsCache.set(cacheKey, paged);
+  }
 
   return {
     ...paged,

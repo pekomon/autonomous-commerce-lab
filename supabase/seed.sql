@@ -4,9 +4,8 @@ values
   ('22222222-2222-2222-2222-222222222222', 'brewing-gear', 'Brewing Gear'),
   ('33333333-3333-3333-3333-333333333333', 'espresso', 'Espresso'),
   ('44444444-4444-4444-4444-444444444444', 'subscriptions', 'Subscriptions')
-on conflict (id) do update
+on conflict (slug) do update
 set
-  slug = excluded.slug,
   name = excluded.name;
 
 insert into public.products (
@@ -101,14 +100,21 @@ set
   tags = excluded.tags;
 
 insert into public.product_categories (product_id, category_id)
-values
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', '11111111-1111-1111-1111-111111111111'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', '11111111-1111-1111-1111-111111111111'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', '11111111-1111-1111-1111-111111111111'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', '33333333-3333-3333-3333-333333333333'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4', '22222222-2222-2222-2222-222222222222'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5', '22222222-2222-2222-2222-222222222222'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6', '44444444-4444-4444-4444-444444444444'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa7', '11111111-1111-1111-1111-111111111111'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa8', '11111111-1111-1111-1111-111111111111')
+select
+  seed_links.product_id,
+  categories.id
+from (
+  values
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1'::uuid, 'coffee-beans'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2'::uuid, 'coffee-beans'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3'::uuid, 'coffee-beans'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3'::uuid, 'espresso'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4'::uuid, 'brewing-gear'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5'::uuid, 'brewing-gear'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6'::uuid, 'subscriptions'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa7'::uuid, 'coffee-beans'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa8'::uuid, 'coffee-beans')
+) as seed_links(product_id, category_slug)
+join public.categories categories
+  on categories.slug = seed_links.category_slug
 on conflict (product_id, category_id) do nothing;

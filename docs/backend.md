@@ -61,9 +61,10 @@ Apply the same seed data to the linked remote project:
 supabase db push --include-seed
 ```
 
-The seed is idempotent:
+The seed is safe to rerun for the demo rows it manages:
 
-- categories and products use stable IDs and are upserted
+- categories reconcile by `slug`, so seeded categories can coexist with linked remotes that already contain those slugs under different UUIDs
+- products use stable seed IDs and are upserted when those seed-managed rows already exist
 - product-category links use `on conflict do nothing`
 - sample products are mostly `active`, with one `draft` example
 - product images are intentionally not seeded, so the storefront shows placeholders instead of broken storage URLs

@@ -43,6 +43,33 @@ supabase start
 supabase db reset
 ```
 
+Because this project now includes `supabase/seed.sql`, `supabase db reset` also seeds a base demo catalog by default.
+
+## Seed demo catalog data
+
+Use the built-in Supabase seed flow when you want a ready-made base set of categories and products.
+
+Seed the local Supabase stack:
+
+```bash
+supabase db reset
+```
+
+Apply the same seed data to the linked remote project:
+
+```bash
+supabase db push --include-seed
+```
+
+The seed is idempotent:
+
+- categories and products use stable IDs and are upserted
+- product-category links use `on conflict do nothing`
+- sample products are mostly `active`, with one `draft` example
+- product images are intentionally not seeded, so the storefront shows placeholders instead of broken storage URLs
+
+Note: seed data does not create auth users or admin allowlist entries.
+
 ## Generate TypeScript DB types (storefront)
 
 After schema changes, regenerate storefront Supabase types:

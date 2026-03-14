@@ -212,6 +212,23 @@ async function ensureSeedProductsExist(client) {
   }
 }
 
+async function storageObjectExists(client, path) {
+  const separatorIndex = path.lastIndexOf('/');
+  const prefix = separatorIndex === -1 ? '' : path.slice(0, separatorIndex);
+  const fileName = separatorIndex === -1 ? path : path.slice(separatorIndex + 1);
+
+  const { data, error } = await client.storage.from(PRODUCT_IMAGES_BUCKET).list(prefix, {
+    limit: 1,
+    search: fileName,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).some((entry) => entry.name === fileName);
+}
+
 async function main() {
   const env = loadLocalEnv();
   const supabaseUrl = env.VITE_SUPABASE_URL ?? env.SUPABASE_URL;
@@ -236,6 +253,7 @@ async function main() {
   for (const image of SEEDED_PRODUCT_IMAGES) {
     const path = `${image.productId}/seed-${image.slug}.svg`;
     const contents = Buffer.from(buildSeedSvg(image), 'utf8');
+    const objectExistedBeforeUpload = await storageObjectExists(supabase, path);
 
     const { error: uploadError } = await supabase.storage
       .from(PRODUCT_IMAGES_BUCKET)
@@ -259,14 +277,16 @@ async function main() {
     );
 
     if (metadataError) {
-      const { error: rollbackError } = await supabase.storage
-        .from(PRODUCT_IMAGES_BUCKET)
-        .remove([path]);
+      if (!objectExistedBeforeUpload) {
+        const { error: rollbackError } = await supabase.storage
+          .from(PRODUCT_IMAGES_BUCKET)
+          .remove([path]);
 
-      if (rollbackError) {
-        throw new Error(
-          `Failed to insert image metadata for ${image.title}, and failed to remove the uploaded object at ${path}: ${rollbackError.message}`,
-        );
+        if (rollbackError) {
+          throw new Error(
+            `Failed to insert image metadata for ${image.title}, and failed to remove the uploaded object at ${path}: ${rollbackError.message}`,
+          );
+        }
       }
 
       throw metadataError;

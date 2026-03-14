@@ -67,7 +67,7 @@ The seed is safe to rerun for the demo rows it manages:
 
 - categories reconcile by `slug`, so seeded categories can coexist with linked remotes that already contain those slugs under different UUIDs
 - products use stable seed IDs and are upserted when those seed-managed rows already exist
-- product-category links use `on conflict do nothing`
+- product-category links add missing seed-managed mappings with `on conflict do nothing`; reruns do not delete preexisting links
 - sample products are mostly `active`, with one `draft` example
 - SQL seed data does not include storage objects; seeded product images use a separate script
 

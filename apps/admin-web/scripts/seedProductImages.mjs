@@ -146,17 +146,69 @@ function buildSeedSvg({ title, subtitle, background, accent }) {
 </svg>`;
 }
 
-async function ensureBucket(client) {
-  const { error } = await client.storage.createBucket(PRODUCT_IMAGES_BUCKET, {
-    public: true,
-  });
+async function listBuckets(client) {
+  const { data, error } = await client.storage.listBuckets();
 
-  if (
-    error &&
-    !error.message.toLowerCase().includes('already exists') &&
-    !error.message.toLowerCase().includes('duplicate')
-  ) {
+  if (error) {
     throw error;
+  }
+
+  return data ?? [];
+}
+
+async function ensureBucket(client) {
+  const existingBucket = (await listBuckets(client)).find(
+    (bucket) => bucket.id === PRODUCT_IMAGES_BUCKET || bucket.name === PRODUCT_IMAGES_BUCKET,
+  );
+
+  if (!existingBucket) {
+    const { error } = await client.storage.createBucket(PRODUCT_IMAGES_BUCKET, {
+      public: true,
+    });
+
+    if (
+      error &&
+      !error.message.toLowerCase().includes('already exists') &&
+      !error.message.toLowerCase().includes('duplicate')
+    ) {
+      throw error;
+    }
+  }
+
+  const resolvedBucket = (await listBuckets(client)).find(
+    (bucket) => bucket.id === PRODUCT_IMAGES_BUCKET || bucket.name === PRODUCT_IMAGES_BUCKET,
+  );
+
+  if (!resolvedBucket) {
+    throw new Error(`Unable to resolve storage bucket ${PRODUCT_IMAGES_BUCKET}.`);
+  }
+
+  if (!resolvedBucket.public) {
+    const { error } = await client.storage.updateBucket(PRODUCT_IMAGES_BUCKET, {
+      public: true,
+    });
+
+    if (error) {
+      throw error;
+    }
+  }
+}
+
+async function ensureSeedProductsExist(client) {
+  const productIds = SEEDED_PRODUCT_IMAGES.map((image) => image.productId);
+  const { data, error } = await client.from('products').select('id').in('id', productIds);
+
+  if (error) {
+    throw error;
+  }
+
+  const existingIds = new Set((data ?? []).map((row) => row.id));
+  const missingIds = productIds.filter((productId) => !existingIds.has(productId));
+
+  if (missingIds.length > 0) {
+    throw new Error(
+      `Missing seeded products. Apply supabase/seed.sql before seeding images. Missing product IDs: ${missingIds.join(', ')}`,
+    );
   }
 }
 
@@ -179,6 +231,7 @@ async function main() {
   });
 
   await ensureBucket(supabase);
+  await ensureSeedProductsExist(supabase);
 
   for (const image of SEEDED_PRODUCT_IMAGES) {
     const path = `${image.productId}/seed-${image.slug}.svg`;
@@ -206,6 +259,16 @@ async function main() {
     );
 
     if (metadataError) {
+      const { error: rollbackError } = await supabase.storage
+        .from(PRODUCT_IMAGES_BUCKET)
+        .remove([path]);
+
+      if (rollbackError) {
+        throw new Error(
+          `Failed to insert image metadata for ${image.title}, and failed to remove the uploaded object at ${path}: ${rollbackError.message}`,
+        );
+      }
+
       throw metadataError;
     }
 

@@ -61,6 +61,8 @@ Apply the same seed data to the linked remote project:
 supabase db push --include-seed
 ```
 
+Warning: `supabase db push --include-seed` writes demo catalog rows into the currently linked remote project. Use it only for environments where demo data is appropriate.
+
 The seed is safe to rerun for the demo rows it manages:
 
 - categories reconcile by `slug`, so seeded categories can coexist with linked remotes that already contain those slugs under different UUIDs
@@ -77,6 +79,7 @@ Demo product images are generated as simple SVG placeholders and uploaded to Sup
 
 Prerequisites:
 
+- seeded demo catalog rows already applied from `supabase/seed.sql`
 - `VITE_SUPABASE_URL` (or `SUPABASE_URL`) in local env
 - `SUPABASE_SERVICE_ROLE_KEY` in local env
 
@@ -89,8 +92,11 @@ pnpm --filter @autonomous-commerce-lab/admin-web seed:images
 What it does:
 
 - creates the `product-images` bucket if it does not already exist
+- verifies the bucket is public, because storefront/admin image URLs are public URLs
+- checks that the expected seeded product rows already exist before uploading anything
 - uploads one generated SVG image per seeded product
 - upserts matching rows into `public.product_images`
+- removes the uploaded object if metadata insertion fails after upload
 
 This script is intentionally separate from SQL seeding so database seed data stays lightweight while storage-backed image setup remains opt-in.
 

@@ -61,15 +61,44 @@ Apply the same seed data to the linked remote project:
 supabase db push --include-seed
 ```
 
+Warning: `supabase db push --include-seed` writes demo catalog rows into the currently linked remote project. Use it only for environments where demo data is appropriate.
+
 The seed is safe to rerun for the demo rows it manages:
 
 - categories reconcile by `slug`, so seeded categories can coexist with linked remotes that already contain those slugs under different UUIDs
 - products use stable seed IDs and are upserted when those seed-managed rows already exist
-- product-category links use `on conflict do nothing`
+- product-category links add missing seed-managed mappings with `on conflict do nothing`; reruns do not delete preexisting links
 - sample products are mostly `active`, with one `draft` example
-- product images are intentionally not seeded, so the storefront shows placeholders instead of broken storage URLs
+- SQL seed data does not include storage objects; seeded product images use a separate script
 
 Note: seed data does not create auth users or admin allowlist entries.
+
+## Seed demo product images
+
+Demo product images are generated as simple SVG placeholders and uploaded to Supabase Storage separately from `supabase/seed.sql`.
+
+Prerequisites:
+
+- seeded demo catalog rows already applied from `supabase/seed.sql`
+- `VITE_SUPABASE_URL` (or `SUPABASE_URL`) in local env
+- `SUPABASE_SERVICE_ROLE_KEY` in local env
+
+Run:
+
+```bash
+pnpm --filter @autonomous-commerce-lab/admin-web seed:images
+```
+
+What it does:
+
+- creates the `product-images` bucket if it does not already exist
+- verifies the bucket is public, because storefront/admin image URLs are public URLs
+- checks that the expected seeded product rows already exist before uploading anything
+- uploads one generated SVG image per seeded product
+- upserts matching rows into `public.product_images`
+- removes the uploaded object if metadata insertion fails after upload
+
+This script is intentionally separate from SQL seeding so database seed data stays lightweight while storage-backed image setup remains opt-in.
 
 ## Generate TypeScript DB types (storefront)
 
